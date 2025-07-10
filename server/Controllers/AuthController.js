@@ -1,51 +1,52 @@
-const User = require("../models/UserModel");
-const { createSecretToken } = require("../util/SecretToken");
+const User = require("../models/User");
+const { createSecretToken } = require("../utils/token");
 const bcrypt = require("bcrypt");
 
-module.exports.Signup = async (req, res, next) => {
+exports.signup = async (req, res) => {
   try {
-    const { email, password, username, createdAt } = req.body;
+    const { email, password, username } = req.body;
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.json({ message: "User already exists" });
-    }
-    const user = await User.create({ email, password, username, createdAt });
+    if (existingUser) return res.json({ message: "User already exists" });
+
+    const user = await User.create({ email, password, username });
     const token = createSecretToken(user._id);
-    res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
-    });
-    res
-      .status(201)
-      .json({ message: "User signed in successfully", success: true, user });
-    next();
+
+    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+    res.status(201).json({ message: "Signup successful", user });
   } catch (error) {
-    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };
-module.exports.Login = async (req, res, next) => {
+
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if(!email || !password ){
-      return res.json({message:'All fields are required'})
-    }
+    if (!email || !password) return res.json({ message: "All fields required" });
+
     const user = await User.findOne({ email });
-    if(!user){
-      return res.json({message:'Incorrect password or email' }) 
-    }
-    const auth = await bcrypt.compare(password,user.password)
-    if (!auth) {
-      return res.json({message:'Incorrect password or email' }) 
-    }
-     const token = createSecretToken(user._id);
-     console.log(token);
-     res.cookie("token", token, {
-       withCredentials: true,
-       httpOnly: false,
-     });
-     res.status(201).json({ message: "User logged in successfully", success: true,token : token });
-     next()
+    if (!user) return res.json({ message: "Incorrect email or password" });
+
+    const auth = await bcrypt.compare(password, user.password);
+    if (!auth) return res.json({ message: "Incorrect email or password" });
+
+    const token = createSecretToken(user._id);
+    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+    res.status(200).json({ message: "Login successful", user });
   } catch (error) {
-    console.error(error);
+    res.status(500).json({ error: error.message });
   }
-}
+};
+
+exports.verifyUser = async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.json({ status: false });
+
+  try {
+    const data = jwt.verify(token, process.env.TOKEN_SECRET);
+    const user = await User.findById(data.id);
+    if (user) return res.json({ status: true, user: user.username });
+    else return res.json({ status: false });
+  } catch {
+    return res.json({ status: false });
+  }
+};
