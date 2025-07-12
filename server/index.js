@@ -1,33 +1,59 @@
-require("dotenv").config({ debug: true })
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const RedisStore = require("connect-redis").default;
 
-//routes import
+// Utilities & Routes
+const redisClient = require("./util/RediaClient"); // Ensure this path is correct
 const authRoute = require("./Routes/AuthRoute");
-const RepoRoute = require("./Routes/RepoRoutes")
+const repoRoute = require("./Routes/RepoRoutes");
 
 const app = express();
 const PORT = 3000;
 
+// Connect to Redis
+redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+redisClient.on('connect', () => console.log('Connected to Redis'));
+const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
+
+// --- Middleware Pipeline (Order is crucial) ---
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173"],
+  origin: ['http://localhost:5173'], // Your frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
-//DB Connection
+app.use(
+  session({
+    store: redisStore,
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      sameSite: 'lax', // Correctly placed inside the cookie object
+    },
+  })
+);
+
+// --- Database & Routes ---
 mongoose.connect(process.env.MONGO_URL, {})
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error(err));
-// Routes
+
 app.use("/api/auth", authRoute);
-app.use("/api/github", RepoRoute);
+app.use("/api/github", repoRoute);
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 // 404 Handler
-app.use((req, res) => res.status(404).json({ error: "Not found" }));
-// 404 Handler
+app.use((req, res) => res.status(404).json({ error: "Route not found" }));
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,17 +1,17 @@
-const express = require("express");
-const { fetchRepoDetails } = require("../api/githubApi");
+const router = require('express').Router();
+const { fetchRepoDetails } = require('../Controllers/GithubController');
+// Import other controllers as you create them
 
-
-const router = express.Router();
-
-router.get("/:username/:reponame", async (req, res) => {
-  const { username, reponame } = req.params;
-  try {
-    const repoData = await fetchRepoDetails(username, reponame);
-    res.json(repoData);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// --- FIX ---
+// Import the controller function from your API file
+const { 
+  fetchUserReposController
+ } = require("../api/githubApi");
+ const { requireAuth } = require("../Middlewares/AuthMiddleware");
+ router.get("/user/repos", requireAuth, fetchUserReposController);
+ // --- FIX ---
+ // Assign the controller function directly to the route.
+ // Express will automatically pass (req, res) to it.
+ router.get('/:username/:reponame', fetchRepoDetails);
 
 module.exports = router;
