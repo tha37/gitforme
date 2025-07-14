@@ -1,0 +1,17 @@
+# Flask and its asynchronous dependencies
+Flask[async]
+Flask-Cors
+
+# For making HTTP requests to GitHub API
+requests
+aiohttp
+
+# For numerical operations and machine learning
+numpy
+torch
+transformers
+faiss-cpu
+
+# For handling environment variables and OpenAI API
+python-dotenv
+openai
