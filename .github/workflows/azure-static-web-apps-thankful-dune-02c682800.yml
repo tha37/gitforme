@@ -28,9 +28,10 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "./gitforme" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "." # Built app content directory - optional
+          ###### Corrected Build Configurations ######
+          app_location: "gitforme"  # Correct path to your frontend code
+          api_location: ""          # Leave this blank
+          output_location: "dist"     # Vite's build output folder
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
