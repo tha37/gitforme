@@ -1,15 +1,14 @@
-// Example: middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/UserModel'); // Use a single, consistent path
+const User = require('../models/UserModel');
+
 exports.requireAuth = (req, res, next) => {
-    // Check if the user ID is stored in the session
     if (req.session && req.session.userId) {
-        return next(); // User is authenticated, proceed to the controller
+        return next();
     } else {
-        // User is not authenticated
         return res.status(401).json({ message: "Unauthorized: You must be logged in to view this content." });
     }
 };
+
 exports.verifyToken = async (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
@@ -18,7 +17,7 @@ exports.verifyToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-    req.user = await User.findById(decoded.id).select('-password'); // Attach user to request but exclude password
+    req.user = await User.findById(decoded.id).select('-password');
     if (!req.user) {
         return res.status(401).json({ status: false, message: 'Invalid token.' });
     }

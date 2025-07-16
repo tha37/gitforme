@@ -1,9 +1,9 @@
 import React from 'react';
 import { GitHubIcon } from '../src/components/icons';
-
+const apiServerUrl = import.meta.env.VITE_API_URL;
 const Login = () => {
   const handleGitHubLogin = () => {
-    window.location.href = 'http://localhost:3000/api/auth/github';
+    window.location.href = `${apiServerUrl}/api/auth/github`;
   };
 
   return (

@@ -11,7 +11,9 @@ const RepoPage = () => {
 
   async function fetchrepo() {
     try {
-      const response = await axios.get(`http://localhost:3000/api/github/${username}/${reponame}`);
+       const apiServerUrl = import.meta.env.VITE_API_URL;
+        const apiBase = `${apiServerUrl}/api/github/${username}/${reponame}`;
+      const response = await axios.get(`${apiBase}`);
       setRepoData(response.data);
       setLoading(false);
     } catch (err) {
@@ -38,7 +40,6 @@ const RepoPage = () => {
               <tr key={key}>
                 <td style={{ fontWeight: "bold", paddingRight: "10px" }}>{key}</td>
                 <td>
-                  {/* Render JSON for objects/arrays, simple value otherwise */}
                   {typeof value === "object" && value !== null
                     ? <pre style={{ margin: 0 }}>{JSON.stringify(value, null, 2)}</pre>
                     : value?.toString()}
