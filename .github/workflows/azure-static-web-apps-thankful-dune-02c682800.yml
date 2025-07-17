@@ -14,12 +14,9 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
-    
-    # Add permissions for Static Web Apps
     permissions:
-      id-token: write  # Required for OIDC
+      id-token: write # Required for OIDC
       contents: read
-    
     steps:
       - uses: actions/checkout@v3
         with:
@@ -35,6 +32,12 @@ jobs:
           app_location: "gitforme"
           api_location: ""
           output_location: "dist"
+        env: # <-- CORRECT INDENTATION
+          # These variables are passed to the build process
+          VITE_API_URL: ${{ secrets.VITE_API_URL }} # <-- USE SECRET
+          VITE_OPENAI_ENDPOINT: ${{ secrets.VITE_OPENAI_ENDPOINT }}
+          VITE_OPENAI_DEPLOYMENT: ${{ secrets.VITE_OPENAI_DEPLOYMENT }}
+          VITE_OPENAI_API_VERSION: ${{ secrets.VITE_OPENAI_API_VERSION }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

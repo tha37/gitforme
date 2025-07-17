@@ -20,7 +20,7 @@ const insightsRoutes = require('./Routes/InsightRoutes');
   const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
 
   app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['https://thankful-dune-02c682800.2.azurestaticapps.net/'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   }));
