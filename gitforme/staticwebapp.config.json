@@ -5,5 +5,9 @@
     "appLocation": "gitforme",
     "outputLocation": "dist"
   },
-  "engine": "node@20"
+  "engine": "node@20",
+   "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/static/*", "/*.{js,css,png,jpg,gif,svg}"]
+  }
 }

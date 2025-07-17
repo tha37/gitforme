@@ -1,4 +1,4 @@
-
+import ReactMarkdown from 'react-markdown';
 export const ReportModal = ({ isOpen, onClose, reportContent, isLoading }) => {
     if (!isOpen) return null;
 
