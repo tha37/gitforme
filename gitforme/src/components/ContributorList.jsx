@@ -1,5 +1,4 @@
 
-
 export const ContributorsList = ({ contributors }) => {
     if (!contributors || contributors.length === 0) {
         return <p className="text-base text-gray-500">No contributors found.</p>;

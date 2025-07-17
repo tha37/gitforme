@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 
 const FileGraph = ({ treeData, onFileSelect, onFolderSelect, focusedNode }) => {
@@ -7,7 +7,6 @@ const FileGraph = ({ treeData, onFileSelect, onFolderSelect, focusedNode }) => {
     const zoomRef = useRef();
     const simulationRef = useRef();
     
-    // SVG icons for different file types
     const fileIcons = {
         js: `<path d="M12 2a2 2 0 00-2 2v2h-2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2zm-2 4h4v2h-4V6zm-2 4h8v8H8v-8z" />`,
         json: `<path d="M12 2a2 2 0 00-2 2v2H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2zm-2 4h4v2h-4V6zm-2 4h8v6H8v-6z" />`,
