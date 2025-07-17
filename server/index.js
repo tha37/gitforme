@@ -14,18 +14,15 @@ const { requireAuth } = require("./Middlewares/AuthMiddleware");
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1); 
-// Redis client setup
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 redisClient.on('connect', () => console.log('Connected to Redis'));
 const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
 
-// --- Middleware Registration ---
-
-// 1. CORS - Must come early
 app.use(cors({
   origin: [
     'https://www.gitforme.tech',
     'https://thankful-dune-02c682800.2.azurestaticapps.net',
+    'https://gitforme-bot.onrender.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE' ,'OPTIONS'],
    allowedHeaders: ['Content-Type', 'Authorization'],
@@ -46,7 +43,7 @@ app.use(
     cookie: {
   secure: true, 
   httpOnly: true,
-  maxAge: 1000 * 60 * 60 * 24, // 1 day
+  maxAge: 1000 * 60 * 60 * 24, 
   sameSite: 'none', 
 },
   })
