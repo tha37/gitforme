@@ -17,16 +17,25 @@ app.set('trust proxy', 1);
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 redisClient.on('connect', () => console.log('Connected to Redis'));
 const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
-
+const allowedOrigins = [
+  'https://www.gitforme.tech',
+  'https://thankful-dune-02c682800.2.azurestaticapps.net',
+  'https://gitforme-bot.onrender.com'
+];
 app.use(cors({
-  origin: [
-    'https://www.gitforme.tech',
-    'https://thankful-dune-02c682800.2.azurestaticapps.net',
-    'https://gitforme-bot.onrender.com'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE' ,'OPTIONS'],
-   allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `CORS policy: ${origin} not allowed`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // 2. Body Parsers
