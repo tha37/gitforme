@@ -8,74 +8,188 @@ import {
     TargetIcon,
     BarChartIcon,
 } from '../components/Iconsfile';
-import FeatureCard from '../cards/FeatureCard';
-import StepCard from '../cards/StepCard';
+import FeatureCard from '../cards/FeatureCard'; 
+        import StepCard from '../cards/StepCard';       // Ensure StepCard accepts number, title, description
 
 
 const LandingPageContent = () => {
+    // Animation variants for sections to appear smoothly
     const sectionVariants = {
-        hidden: { opacity: 0 },
+        hidden: { opacity: 0, y: 30 },
         visible: {
             opacity: 1,
-            transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+            y: 0,
+            transition: { 
+                staggerChildren: 0.1, 
+                delayChildren: 0.2,
+                duration: 0.7, // Smooth transition for the section itself
+                ease: "easeOut"
+            }
         }
     };
+
+    // Animation variants for individual text elements/cards
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+    };
+
     return (
-        <motion.div initial="hidden" animate="visible" exit={{ opacity: 0 }}>
-            <main className="flex flex-col items-center justify-center pt-16 md:pt-24 px-4 text-center">
-                <div className="relative">
+        // Main container with initial and exit animations
+        <motion.div initial="hidden" animate="visible" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
+            {/* --- Hero Section: Your Gateway to Open Source --- */}
+            {/* --- Hero Section: Your Gateway to Open Source --- */}
+            <main className="flex flex-col items-center justify-center pt-16 md:pt-24 px-4 text-center relative overflow-hidden">
+                <div className="relative z-10">
+                    {/* Decorative Sparkle Icons for visual flair */}
                     <SparkleIcon className="absolute top-[-3rem] left-[-5rem] w-20 h-20 text-red-300 rotate-[-15deg] opacity-50 -z-10" />
                     <SparkleIcon className="absolute top-[-1rem] right-[-5rem] w-24 h-24 text-teal-300 rotate-[20deg] opacity-50 -z-10" />
-                    <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="text-5xl md:text-7xl font-bold tracking-tighter">Code to Context</motion.h1>
-                    <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="text-5xl md:text-7xl font-bold tracking-tighter mt-1 bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-red-500 pb-2">Instantly</motion.h1>
-                    <motion.p variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="mt-6 text-lg text-gray-600 max-w-lg mx-auto">
-                        Turn any Git repo into a structured, LLM-ready summary of its architecture, dependencies, and logic.
+                    
+                    {/* Main Headline */}
+                    <motion.h1 
+                        variants={itemVariants} 
+                        className="text-5xl md:text-7xl font-bold tracking-tighter font-space-mono text-gray-900" 
+                    >
+                        Dive into Open Source.
+                    </motion.h1>
+                    <motion.h1 
+                        variants={itemVariants} 
+                        className="text-5xl md:text-7xl font-bold tracking-tighter mt-1 bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-red-500 pb-2 font-space-mono" 
+                    >
+                        Master Any Repo. Instantly.
+                    </motion.h1>
+                    
+                    {/* Sub-headline / Tagline - UPDATED HERE */}
+                    <motion.p 
+                        variants={itemVariants} 
+                        className="mt-6 text-lg md:text-xl text-gray-700 max-w-lg mx-auto font-semibold" 
+                    >
+                        Transform any GitHub repository into an <span className="font-bold text-gray-900">AI-powered guide</span> for newcomers and seasoned developers alike. Get structured insights, understand code, and contribute with confidence.
                     </motion.p>
                 </div>
             </main>
-
-            <motion.section variants={sectionVariants} className="py-24 px-4">
+            {/* --- How It Works Section --- */}
+            <motion.section variants={sectionVariants} initial="hidden" animate="visible" className="py-24 px-4">
                 <div className="text-center mb-12">
-                    <h2 className="text-4xl font-bold tracking-tighter">How It Works</h2>
-                    <p className="mt-3 text-lg text-gray-600">Get your code summary in three simple steps.</p>
+                    <motion.h2 
+                        variants={itemVariants} 
+                        className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900" // Applied font-space-mono
+                    >
+                        Your Journey in Three Simple Steps
+                    </motion.h2>
+                    <motion.p 
+                        variants={itemVariants} 
+                        className="mt-3 text-lg text-gray-700 font-medium" // Slightly bolder
+                    >
+                        Unlock the secrets of any codebase, ready for your next big contribution.
+                    </motion.p>
                 </div>
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-center items-stretch gap-8">
-                    <StepCard number="1" title="Paste URL">Drop in any public GitHub repository URL to get started.</StepCard>
-                    <StepCard number="2" title="Click cook">Our AI analyzes the codebase, structure, and dependencies.</StepCard>
-                    <StepCard number="3" title="Get Context">Receive a structured summary, ready for your favorite LLM.</StepCard>
+                    <motion.div variants={itemVariants}>
+                        <StepCard number="1" title="Input & Initialize">
+                            Simply paste any public GitHub repository URL. GitForme intelligently processes the codebase.
+                        </StepCard>
+                    </motion.div>
+                    <motion.div variants={itemVariants}>
+                        <StepCard number="2" title="AI Analysis">
+                            Our LLM-powered engine dives deep, analyzing structure, dependencies, and core logic.
+                        </StepCard>
+                    </motion.div>
+                    <motion.div variants={itemVariants}>
+                        <StepCard number="3" title="Access Instant Context">
+                            Receive a clear, actionable summary tailored for quick understanding or direct LLM prompting.
+                        </StepCard>
+                    </motion.div>
                 </div>
             </motion.section>
 
-            <motion.section variants={sectionVariants} className="py-24 px-4 bg-white/50 backdrop-blur-sm border-y-2 border-black">
+            {/* --- Unlock Instant Code Understanding Section (Core Features) --- */}
+            <motion.section variants={sectionVariants} initial="hidden" animate="visible" className="py-24 px-4 bg-white/50 backdrop-blur-sm border-y-2 border-black">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold tracking-tighter">Unlock Instant Code Understanding</h2>
-                        <p className="mt-3 text-lg text-gray-600">Go from repository to readable context in seconds.</p>
+                        <motion.h2 
+                            variants={itemVariants} 
+                            className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900" // Applied font-space-mono
+                        >
+                            Powerful Insights at Your Fingertips
+                        </motion.h2>
+                        <motion.p 
+                            variants={itemVariants} 
+                            className="mt-3 text-lg text-gray-700 font-medium" // Slightly bolder
+                        >
+                            Go from complex code to clear understanding, instantly.
+                        </motion.p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <FeatureCard icon={<BrainCircuitIcon />} title="Instant Architecture Overview">Grasp the high-level design and component interactions without reading a single line of code.</FeatureCard>
-                        <FeatureCard icon={<FileTextIcon />} title="LLM-Optimized Summaries">Get summaries formatted as perfect context for prompts in ChatGPT, Gemini, or any other LLM.</FeatureCard>
-                        <FeatureCard icon={<CodeIcon />} title="Key Logic Extraction">Automatically identifies and explains the core business logic and critical functions within the repository.</FeatureCard>
+                        <motion.div variants={itemVariants}>
+                            <FeatureCard 
+                                icon={<BrainCircuitIcon />} 
+                                title="AI-Driven Architecture Overviews"
+                                description="Quickly grasp the high-level design, main components, and how they interact, even without prior knowledge."
+                            />
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <FeatureCard 
+                                icon={<FileTextIcon />} 
+                                title="LLM-Ready Context Summaries"
+                                description="Get crisp, concise summaries perfectly formatted for pasting directly into ChatGPT, Gemini, or any other LLM."
+                            />
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <FeatureCard 
+                                icon={<CodeIcon />} 
+                                title="Core Logic Extraction"
+                                description="Automatically pinpoint and explain critical functions, algorithms, and the heart of the repository's operations."
+                            />
+                        </motion.div>
                     </div>
                 </div>
             </motion.section>
 
-            <motion.section variants={sectionVariants} className="py-24 px-4">
+            {/* --- Become a Contributor, Faster Section --- */}
+            <motion.section variants={sectionVariants} initial="hidden" animate="visible" className="py-24 px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold tracking-tighter">Become a Contributor, Faster</h2>
-                        <p className="mt-3 text-lg text-gray-600">Tools to help you find your place and make an impact. 🤝</p>
+                        <motion.h2 
+                            variants={itemVariants} 
+                            className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900" // Applied font-space-mono
+                        >
+                            Empowering Your Open Source Journey
+                        </motion.h2>
+                        <motion.p 
+                            variants={itemVariants} 
+                            className="mt-3 text-lg text-gray-700 font-medium" // Slightly bolder
+                        >
+                            We're here to help you make your first pull request, faster and with confidence. 🚀
+                        </motion.p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <FeatureCard icon={<TargetIcon />} title="Find 'Good First Issues'">
-                            Jump right in. We highlight beginner-friendly issues to help you make your first contribution.
-                        </FeatureCard>
-                        <FeatureCard icon={<BarChartIcon />} title="Deep Repository Insights">
-                            Go beyond the code with language breakdowns, commit activity graphs, and other key project metrics.
-                        </FeatureCard>
+                        <motion.div variants={itemVariants}>
+                            <FeatureCard 
+                                icon={<TargetIcon />} 
+                                title="Discover Beginner-Friendly Issues"
+                                description="Navigate directly to 'good first issues' and other approachable tasks to kickstart your open source contributions."
+                            />
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <FeatureCard 
+                                icon={<BarChartIcon />} 
+                                title="Comprehensive Project Metrics"
+                                description="Dive into language breakdowns, active commit patterns, and key project health indicators to choose your next project wisely."
+                            />
+                        </motion.div>
                     </div>
                 </div>
             </motion.section>
+
+            {/* Call to Action (Optional, can be added if you want a prominent final nudge) */}
+            <motion.div variants={itemVariants} className="mt-20 py-16 text-center bg-[#F9C79A]/50 border-t-2 border-b-2 border-black">
+                <h3 className="text-3xl font-bold text-gray-900 mb-6 font-space-mono">Ready to Contribute?</h3>
+                <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+                  Paste a GitHub repository URL in the header search bar and let GitForme illuminate your path.
+                </p>
+                {/* You might add a button here that scrolls to the top or highlights the search bar */}
+            </motion.div>
         </motion.div>
     );
 }

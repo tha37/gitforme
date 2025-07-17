@@ -5,7 +5,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+         fontFamily: {
+        'space-mono': ['Space Mono', 'monospace'],
+      },
+    },
   },
   plugins: [
     require('@tailwindcss/typography')

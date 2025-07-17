@@ -1,10 +1,19 @@
+// AppHeader.jsx
 import { GitHubIcon } from "../components/Iconsfile";
 
 export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, setRepoUrl, oncook }) => (
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b-2 border-black">
         <div className="container mx-auto px-4 md:px-8 py-3">
             <div className="flex justify-between items-center gap-4">
-                <a href="/" className="text-2xl font-bold tracking-tighter hidden sm:block">GitForMe</a>
+                {/* Apply the new font here */}
+                <a 
+                    href="/" 
+                    className="text-2xl sm:text-3xl font-bold tracking-tighter hidden sm:block 
+                               font-space-mono text-gray-900 
+                               hover:text-amber-600 transition-colors" // Added a subtle hover effect and stronger color
+                >
+                    GitForMe
+                </a>
 
                 <div className="flex-grow flex gap-2">
                     <input
