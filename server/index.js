@@ -54,6 +54,12 @@ mongoose.connect(process.env.MONGO_URL, {})
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
 // --- API Routes ---
+app.use((req, res, next) => {
+  console.log('Incoming cookies:', req.cookies);
+  console.log('Session ID:', req.sessionID);
+  console.log('Session data:', req.session);
+  next();
+});
 
 app.use("/api/auth", authRoute);
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));

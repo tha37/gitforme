@@ -54,20 +54,20 @@ exports.githubCallback = async (req, res) => {
     }
 };
 
-// --- FIX: This function now uses the session, just like the requireAuth middleware ---
+// Modify verifyUser endpoint
 exports.verifyUser = async (req, res) => {
-    if (req.session && req.session.userId) {
-        // If a session exists, the user is logged in.
-        try {
-            const user = await User.findById(req.session.userId).select('-password -githubAccessToken');
-            if (user) {
-                return res.json({ status: true, user: user });
-            }
-        } catch (error) {
-            console.error("Error fetching user for verification:", error);
-            return res.json({ status: false, message: "Error verifying user." });
-        }
+  console.log('VerifyUser - Session:', req.session);
+  if (req.session?.userId) {
+    try {
+      const user = await User.findById(req.session.userId).select('-password -githubAccessToken');
+      if (user) {
+        console.log('User found:', user);
+        return res.json({ status: true, user });
+      }
+    } catch (error) {
+      console.error("Error in verifyUser:", error);
     }
-    // If no session, the user is not logged in.
-    return res.json({ status: false, message: "No active session." });
+  }
+  console.log('No valid session found');
+  return res.json({ status: false, message: "No active session." });
 };
