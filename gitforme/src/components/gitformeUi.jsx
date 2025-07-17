@@ -6,7 +6,7 @@ import ChatbotPanel from './Chatbot';
 import RepoDetailView from './RepoDetailView';
 import LandingPageContent from '../PageContent/LandingPageContent';
 import { AppHeader } from '../PageContent/AppHeader';
-import { ChatIcon, LaptopIcon } from './icons';
+import { ChatIcon, LaptopIcon } from './icons.jsx';
 
 const GitformeUi = () => {
     const { isAuthenticated, user, logout } = useAuth();
