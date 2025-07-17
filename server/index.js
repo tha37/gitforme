@@ -55,28 +55,22 @@ mongoose.connect(process.env.MONGO_URL, {})
 
 // --- API Routes ---
 
-// Public routes (authentication)
 app.use("/api/auth", authRoute);
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-// --- FIX: Corrected routing for all /api/github endpoints ---
-// Apply the authentication middleware to all routes starting with /api/github
 app.use("/api/github", requireAuth);
 
-// Now, register the specific routers that handle the authenticated /api/github requests
-app.use("/api/github", insightsRoutes); // Handles insight-specific routes
-app.use("/api/github", repoRoute);      // Handles general repo routes
+app.use("/api/github", insightsRoutes);
+app.use("/api/github", repoRoute);     
 
-// This logout route should probably be part of your auth routes, but works here too
 app.post('/api/auth/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ message: 'Logout failed' });
-    res.clearCookie('token'); // This may not be needed if you only use sessions
+    res.clearCookie('token'); 
     res.json({ status: true });
   });
 });
 
-// 404 Handler - This must be the last route handler
 app.use((req, res) => res.status(404).json({ error: "Route not found" }));
 
 // --- Server Start ---

@@ -11,6 +11,6 @@ router.get('/github', (req, res) => {
 router.get('/github/callback', githubCallback);
 
 // Verify user token for frontend
-router.get('/verifyUser', verifyUser);
+router.post('/verifyUser', verifyUser);
 
 module.exports = router;
