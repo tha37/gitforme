@@ -11,8 +11,8 @@
   const repoRoute = require("./Routes/RepoRoutes");
   const { requireAuth } = require("./Middlewares/AuthMiddleware");
 const { fetchRepoInsights } = require("./Controllers/GithubController");
-  const app = express();
-  const PORT = 3000;
+ const app = express();
+const PORT = process.env.PORT || 3000;
 const insightsRoutes = require('./Routes/InsightRoutes'); 
 
   redisClient.on('error', (err) => console.error('Redis Client Error:', err));
@@ -20,7 +20,7 @@ const insightsRoutes = require('./Routes/InsightRoutes');
   const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
 
   app.use(cors({
-    origin: ['https://thankful-dune-02c682800.2.azurestaticapps.net/'],
+    origin: ['https://thankful-dune-02c682800.2.azurestaticapps.net'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   }));
