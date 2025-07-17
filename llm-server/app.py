@@ -3,6 +3,7 @@ import json
 import logging
 import faiss
 import numpy as np
+import time
 import requests
 import aiohttp
 import asyncio
@@ -17,9 +18,11 @@ from collections import defaultdict, deque
 from colorama import Fore, Style
 from urllib.parse import urlparse
 
+# Load environment variables from .env file
 load_dotenv()
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+# Custom formatter for colored log output
 class ColoredFormatter(logging.Formatter):
     LEVEL_COLORS = {
         logging.DEBUG: Fore.BLUE,
@@ -33,42 +36,57 @@ class ColoredFormatter(logging.Formatter):
         reset = Style.RESET_ALL
         return f"{color}{super().format(record)}{reset}"
 
+# Configure logging
 handler = logging.StreamHandler()
 handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
 logging.getLogger().handlers = [handler]
 logging.getLogger().setLevel(logging.INFO)
 
 app = Flask(__name__)
+# Enable CORS for all origins, allowing credentials
 CORS(app, origins="*", supports_credentials=True)
-app.config['PROPAGATE_EXCEPTIONS'] = True
-app.config['DEBUG'] = True
+app.config['PROPAGATE_EXCEPTIONS'] = True # Ensures exceptions are propagated for debugging
+app.config['DEBUG'] = True # Enables debug mode
 
 EMBEDDING_MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
 try:
+    # Load the embedding tokenizer and model globally when the app starts
     EMBEDDING_TOKENIZER = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
     EMBEDDING_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
+    logging.info("Embedding model and tokenizer loaded successfully.")
 except Exception as e:
     logging.critical(f"Failed to load embedding model: {e}")
-    exit()
+    exit() # Exit if models cannot be loaded, as the app won't function without them
 
+# In-memory cache for repository data (embeddings, chunks, paths)
 repo_cache = {}
+# Deque to track API call times for rate limiting
 global_api_call_times = deque()
-GLOBAL_MAX_CALLS_PER_HOUR = 10
-WINDOW_SECONDS = 3600
+GLOBAL_MAX_CALLS_PER_HOUR = 10 # Max calls allowed per hour
+WINDOW_SECONDS = 3600 # Window for rate limiting (1 hour)
 
 def extract_owner_repo(repo_url: str):
+    """
+    Extracts the GitHub repository owner and name from a URL or string.
+    Raises ValueError if the format is invalid.
+    """
     if "github.com" in repo_url:
         path = urlparse(repo_url).path.strip("/")
         parts = path.split("/")
     else:
         parts = repo_url.strip().split("/")
     if len(parts) != 2 or not all(parts):
-        raise ValueError(f"Invalid GitHub repo format: {repo_url}")
+        raise ValueError(f"Invalid GitHub repo format: {repo_url}. Expected 'owner/repo' or a GitHub URL.")
     return parts[0], parts[1]
 
 def summarize_code(file_path, code):
+    """
+    Generates a brief summary of a code file based on its extension and content.
+    """
     summary_lines = []
     lines = code.splitlines()
+
+    # Add file type specific summaries
     if file_path.endswith(('.js', '.ts', '.jsx', '.tsx')):
         summary_lines.append(f"This appears to be a JavaScript/TypeScript file.")
     elif file_path.endswith('.py'):
@@ -77,16 +95,23 @@ def summarize_code(file_path, code):
         return f"File: {file_path}\nSummary: A JSON configuration or data file."
     elif file_path.endswith(('.md', '.mdx')):
         return f"File: {file_path}\nSummary: A Markdown documentation file. Content snippet:\n{code[:500]}"
+    
+    # Extract key definitions for code files
     signatures = [line.strip() for line in lines if line.strip().startswith(('def ', 'class ', 'function', 'const', 'export default'))]
     if signatures:
         summary_lines.append("It contains the following key definitions:")
-        summary_lines.extend(f"- `{sig}`" for sig in signatures[:5])
+        summary_lines.extend(f"- `{sig}`" for sig in signatures[:5]) # Limit to first 5 signatures
+    
     return f"File: {file_path}\nSummary: {' '.join(summary_lines)}"
 
 async def download_content(session, url):
+    """
+    Asynchronously downloads content from a given URL.
+    """
     try:
         async with session.get(url) as response:
             if response.status == 200:
+                logging.debug(f"Successfully downloaded {url}")
                 return await response.text()
             else:
                 logging.warning(f"Failed to fetch {url}, status: {response.status}")
@@ -96,22 +121,44 @@ async def download_content(session, url):
         return None
 
 async def get_relevant_context(repo_url, query):
+    """
+    Fetches repository files, summarizes them, generates embeddings,
+    and retrieves context relevant to the query using FAISS.
+    Includes detailed logging for performance measurement.
+    """
+    total_start_time = time.time() # Start total time measurement for this function
+    logging.info(f"Starting context retrieval for repo: {repo_url} with query: '{query}'")
+
     owner, repo = extract_owner_repo(repo_url)
     owner_repo = f"{owner}/{repo}"
+
     if owner_repo in repo_cache:
-        logging.info(f"Cache hit for repo: {owner_repo}")
+        logging.info(f"Cache hit for repo: {owner_repo}. Skipping GitHub fetch and embedding generation.")
         cache_data = repo_cache[owner_repo]
     else:
-        logging.info(f"Cache miss for repo: {owner_repo}. Fetching from GitHub.")
+        logging.info(f"Cache miss for repo: {owner_repo}. Initiating GitHub fetch and processing.")
+        
+        # --- GitHub API Calls ---
+        github_api_start_time = time.time()
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "GitFormeBot/1.0"}
-        repo_info = requests.get(f"https://api.github.com/repos/{owner}/{repo}", headers=headers)
-        if repo_info.status_code != 200:
+        
+        # Fetch repository info
+        repo_info_res = requests.get(f"https://api.github.com/repos/{owner}/{repo}", headers=headers)
+        if repo_info_res.status_code != 200:
+            logging.error(f"Failed to fetch repo info for {owner_repo}, status: {repo_info_res.status_code}")
             return None, "Failed to fetch repository info. Please check if the URL is correct and public."
-        default_branch = repo_info.json().get("default_branch", "main")
+        default_branch = repo_info_res.json().get("default_branch", "main")
+        logging.info(f"Fetched repo info in {time.time() - github_api_start_time:.2f}s. Default branch: {default_branch}")
+
+        # Fetch file tree
         tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1"
         tree_res = requests.get(tree_url, headers=headers)
         if tree_res.status_code != 200:
+            logging.error(f"Failed to fetch file tree for {owner_repo}, status: {tree_res.status_code}")
             return None, "Failed to fetch repository file tree."
+        logging.info(f"Fetched file tree in {time.time() - github_api_start_time:.2f}s (total GitHub API time so far).")
+
+        # Filter relevant files
         files_to_fetch = [
             f for f in tree_res.json().get("tree", [])
             if f['type'] == 'blob' and not f['path'].startswith('.') and f['size'] < 100000
@@ -122,31 +169,77 @@ async def get_relevant_context(repo_url, query):
             ))
         ]
         if not files_to_fetch:
+            logging.warning(f"No relevant code or documentation files found in {owner_repo}.")
             return None, "No relevant code or documentation files were found in this repository."
+        logging.info(f"Identified {len(files_to_fetch)} files to fetch content for.")
+
+        # --- Asynchronous Content Downloads ---
+        download_start_time = time.time()
         async with aiohttp.ClientSession() as session:
-            tasks = [download_content(session, f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{f['path']}") for f in files_to_fetch]
+            tasks = [
+                download_content(session, f"https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{f['path']}")
+                for f in files_to_fetch
+            ]
             raw_contents = await asyncio.gather(*tasks)
-        file_summaries = {f["path"]: summarize_code(f["path"], content) for f, content in zip(files_to_fetch, raw_contents) if content}
+        logging.info(f"Downloaded {len([c for c in raw_contents if c is not None])} file contents in {time.time() - download_start_time:.2f}s.")
+
+        # --- File Summarization ---
+        summarize_start_time = time.time()
+        file_summaries = {
+            f["path"]: summarize_code(f["path"], content)
+            for f, content in zip(files_to_fetch, raw_contents) if content
+        }
         if not file_summaries:
+            logging.error(f"Failed to load content from any relevant files for {owner_repo} after download.")
             return None, "Failed to load content from any relevant files."
+        logging.info(f"Summarized {len(file_summaries)} files in {time.time() - summarize_start_time:.2f}s.")
+
         file_paths = list(file_summaries.keys())
         code_chunks = list(file_summaries.values())
+
+        # --- Embedding Generation ---
+        embedding_start_time = time.time()
         encoded = EMBEDDING_TOKENIZER(code_chunks, padding=True, truncation=True, return_tensors='pt', max_length=512)
         with torch.no_grad():
             output = EMBEDDING_MODEL(**encoded)
         embeddings = output.last_hidden_state.mean(dim=1).cpu().numpy().astype('float32')
+        logging.info(f"Generated {len(embeddings)} embeddings in {time.time() - embedding_start_time:.2f}s.")
+
+        # --- FAISS Indexing ---
+        faiss_index_start_time = time.time()
         index = faiss.IndexFlatL2(embeddings.shape[1])
         index.add(embeddings)
+        logging.info(f"Built FAISS index in {time.time() - faiss_index_start_time:.2f}s.")
+
+        # Store in cache
         repo_cache[owner_repo] = {"index": index, "chunks": code_chunks, "paths": file_paths}
         cache_data = repo_cache[owner_repo]
+        logging.info(f"Repo '{owner_repo}' added to in-memory cache.")
+
+    # --- Query Embedding ---
+    query_embedding_start_time = time.time()
     encoded_query = EMBEDDING_TOKENIZER([query], return_tensors='pt', padding=True, truncation=True, max_length=512)
     with torch.no_grad():
         query_emb = EMBEDDING_MODEL(**encoded_query).last_hidden_state.mean(dim=1).cpu().numpy().astype('float32')
+    logging.info(f"Generated query embedding in {time.time() - query_embedding_start_time:.2f}s.")
+
+    # --- FAISS Search ---
+    faiss_search_start_time = time.time()
     _, top_indices = cache_data['index'].search(query_emb, k=min(10, len(cache_data['chunks'])))
+    logging.info(f"Performed FAISS search in {time.time() - faiss_search_start_time:.2f}s.")
+
+    # Construct context from top results
     context = "\n\n".join([f"--- Context from file: {cache_data['paths'][idx]} ---\n{cache_data['chunks'][idx]}" for idx in top_indices[0]])
+    
+    logging.info(f"Total time for get_relevant_context: {time.time() - total_start_time:.2f}s.")
     return context, None
 
 def stream_llm_response(context, query, repo_url):
+    """
+    Streams the LLM response using Azure OpenAI.
+    """
+    llm_call_start_time = time.time()
+    logging.info("Initiating LLM call to Azure OpenAI.")
     system_prompt = f"""
 # ROLE & GOAL
 You are the GitForme AI Analyst,YOur name is GitBro,I will give you so much info but don't reveal that until user asks for it,wall of your answers should be cool & GenZ style, an expert AI integrated into a GitHub repository explorer application. Your primary function is to provide concise, accurate, and helpful analysis based *exclusively* on the provided context about the repository: {repo_url}. Do not use any external knowledge.
@@ -201,17 +294,27 @@ Please provide your analysis based on these rules and context.
         for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
                 yield f"data: {json.dumps({'token': chunk.choices[0].delta.content})}\n\n"
+        logging.info(f"LLM streaming completed in {time.time() - llm_call_start_time:.2f}s.")
     except Exception as e:
-        logging.error(f"LLM call failed: {e}")
+        logging.error(f"LLM call failed: {e}. Time taken before error: {time.time() - llm_call_start_time:.2f}s.")
         yield f"data: {json.dumps({'error': 'The AI Analyst is currently unavailable.'})}\n\n"
 
 @app.route('/api/chat', methods=['POST'])
 async def chat():
+    """
+    Handles chat requests, including rate limiting and context retrieval.
+    """
+    request_start_time = time.time()
+    logging.info(f"Received request from {request.remote_addr} at /api/chat.")
+
     now = datetime.utcnow()
+    # Clean up old entries in the rate limit window
     while global_api_call_times and now - global_api_call_times[0] > timedelta(seconds=WINDOW_SECONDS):
         global_api_call_times.popleft()
+    
+    # Check global rate limit
     if len(global_api_call_times) >= GLOBAL_MAX_CALLS_PER_HOUR:
-        logging.warning(f"Global rate limit of {GLOBAL_MAX_CALLS_PER_HOUR}/hour exceeded.")
+        logging.warning(f"Global rate limit of {GLOBAL_MAX_CALLS_PER_HOUR}/hour exceeded for {request.remote_addr}.")
         retry_after_seconds = (global_api_call_times[0] + timedelta(seconds=WINDOW_SECONDS) - now).total_seconds()
         minutes, seconds = divmod(int(retry_after_seconds), 60)
         if minutes > 0:
@@ -220,24 +323,44 @@ async def chat():
             error_message = f"Rate limit exceeded. Please try again in {seconds} second(s)."
         response = jsonify({"error": error_message})
         response.headers['Retry-After'] = str(int(retry_after_seconds))
+        logging.info(f"Rate limit response sent in {time.time() - request_start_time:.2f}s.")
         return response, 429
-    global_api_call_times.append(now)
+    
+    global_api_call_times.append(now) # Add current call to the deque
+
     data = request.get_json()
     query = data.get("query")
     repo_id = data.get("repoId")
+
     if not query or not repo_id:
+        logging.error("Missing query or repoId in request.")
         return jsonify({"error": "Missing query or repoId"}), 400
+    
     try:
         owner, repo = extract_owner_repo(repo_id)
         repo_url = f"https://github.com/{owner}/{repo}"
     except ValueError as e:
+        logging.error(f"Invalid repoId format: {repo_id}. Error: {e}")
         return jsonify({"error": str(e)}), 400
-    logging.info(f"Received query from {request.remote_addr} for repo '{repo_id}': '{query}'")
+    
+    logging.info(f"Processing query '{query}' for repo '{repo_id}'.")
+    
+    # Get relevant context from the repository
     context, error = await get_relevant_context(repo_url, query)
+    
     if error:
+        logging.error(f"Error getting context for '{repo_id}': {error}")
         return jsonify({"error": error}), 500
+    
+    logging.info(f"Context retrieved successfully. Total request processing time before streaming: {time.time() - request_start_time:.2f}s.")
+    
+    # Stream LLM response
     return Response(stream_llm_response(context, query, repo_url), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
+    logging.info(f"Starting Flask app on 0.0.0.0:{port}")
+    # When running with Gunicorn (as on Render), this __name__ == '__main__' block
+    # might not be directly executed for starting the server.
+    # Gunicorn will typically load the 'app' object directly.
     app.run(host='0.0.0.0', port=5001)
