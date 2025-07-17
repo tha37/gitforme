@@ -7,7 +7,7 @@
     <a href="https://github.com/herin7/gitforme/actions/workflows/main_gfm-backend.yml"><img src="https://github.com/herin7/gitforme/actions/workflows/main_gfm-backend.yml/badge.svg" alt="Backend CI"></a>
     <a href="https://github.com/herin7/gitforme/actions/workflows/azure-static-web-apps-thankful-dune-02c682800.yml"><img src="https://github.com/herin7/gitforme/actions/workflows/azure-static-web-apps-thankful-dune-02c682800.yml/badge.svg" alt="Frontend CI"></a>
     <a href="https://github.com/herin7/gitforme/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-    <a href="https://github.com/herin7/gitforme/releases"><img src="https://img.shields.io/github/v/release/herin7/gitforme" alt="GitHub release"></a>
+<!--   Will add this later  <a href="https://github.com/herin7/gitforme/releases"><img src="https://img.shields.io/github/v/release/herin7/gitforme" alt="GitHub release"></a> -->
     <a href="https://github.com/herin7/gitforme/issues"><img src="https://img.shields.io/github/issues/herin7/gitforme" alt="Issues"></a>
   </p>
 </div>
