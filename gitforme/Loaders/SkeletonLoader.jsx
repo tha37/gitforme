@@ -6,6 +6,6 @@ export const FullPageLoader = () => (
             <div className="w-4 h-4 bg-amber-500 rounded-full animate-pulse [animation-delay:-0.15s]"></div>
             <div className="w-4 h-4 bg-amber-500 rounded-full animate-pulse"></div>
         </div>
-        <p className="text-center font-bold text-xl text-gray-700 mt-4">Loading Repository...</p>
+        <p className="text-center font-bold text-xl text-gray-700 mt-4">Cooking...</p>
     </div>
 );

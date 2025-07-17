@@ -1,13 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'react-hot-toast'; 
-const CustomImageRenderer = ({ src, alt, ...props }) => {
-    const handleImageError = (e) => {
-        e.target.onerror = null;
-        e.target.src = `https://via.placeholder.com/300x150/f44336/FFFFFF?text=Image+Not+Found`;
-    };
-    return <img src={src} alt={alt} {...props} onError={handleImageError} style={{ maxWidth: '100%', height: 'auto' }} />;
-};
 
 
 export const ReportModal = ({ isOpen, onClose, reportContent, isLoading }) => {
@@ -17,11 +10,6 @@ export const ReportModal = ({ isOpen, onClose, reportContent, isLoading }) => {
         navigator.clipboard.writeText(reportContent || '');
         toast.success("Report copied to clipboard!");
     };
-
-    const markdownComponents = {
-        img: CustomImageRenderer,
-    };
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={onClose}>
             <div className="bg-white p-6 border-2 border-black rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-[8px_8px_0px_rgba(0,0,0,1)]" onClick={e => e.stopPropagation()}>
@@ -40,7 +28,7 @@ export const ReportModal = ({ isOpen, onClose, reportContent, isLoading }) => {
                         </div>
                     ) : (
                         <div className="prose prose-lg max-w-none p-2">
-                            <ReactMarkdown components={markdownComponents}>
+                            <ReactMarkdown>
                                 {reportContent || '*No report content available.*'}
                             </ReactMarkdown>
                         </div>

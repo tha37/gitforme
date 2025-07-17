@@ -239,4 +239,5 @@ async def chat():
     return Response(stream_llm_response(context, query, repo_url), mimetype='text/event-stream')
 
 if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5001))
     app.run(host='0.0.0.0', port=5001)

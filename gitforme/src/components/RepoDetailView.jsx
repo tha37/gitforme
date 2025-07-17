@@ -312,7 +312,7 @@ BODY: ${issue.body || 'No description.'}
     if (error) return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-red-50 p-4">
             <div className="text-5xl mb-4">🚫</div>
-            <p className="text-center text-red-600 font-semibold text-2xl">Error Fetching Repository</p>
+            <p className="text-center text-red-600 font-semibold text-2xl">Login to start cooking : </p>
             <p className="text-gray-600 mt-2 text-lg">{error}</p>
         </div>
     );

@@ -50,7 +50,7 @@ const useChat = () => {
         setStatus('Thinking...');
 
         try {
-            const response = await fetch('http://localhost:5001/api/chat', {
+            const response = await fetch('https://gitforme-bot.onrender.com/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: messageText, repoId: `${username}/${reponame}` }),
