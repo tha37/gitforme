@@ -15,4 +15,4 @@ const FeatureCard = ({ icon, title, children }) => (
     </motion.div>
 );
 
-export default FeatureCard;a
+export default FeatureCard;
