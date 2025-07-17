@@ -6,7 +6,12 @@ import ChatbotPanel from './Chatbot';
 import RepoDetailView from './RepoDetailView';
 import LandingPageContent from '../PageContent/LandingPageContent';
 import { AppHeader } from '../PageContent/AppHeader';
-import { ChatIcon, LaptopIcon } from './icons.jsx';
+ const ChatIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+const LaptopIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55A1 1 0 0 1 20.28 20H3.72a1 1 0 0 1-.98-1.45L4 16"/></svg>;
 
 const GitformeUi = () => {
     const { isAuthenticated, user, logout } = useAuth();
