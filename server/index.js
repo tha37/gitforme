@@ -13,7 +13,7 @@ const { requireAuth } = require("./Middlewares/AuthMiddleware");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+app.set('trust proxy', 1); 
 // Redis client setup
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 redisClient.on('connect', () => console.log('Connected to Redis'));
