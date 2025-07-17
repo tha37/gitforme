@@ -6,7 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FileGraph } from './Filegraph';
+import { FileGraph } from './FileGraph';
 import { DirectoryStructure } from './DirectoryStructure';
 import { Icon } from './Iconsfile';
 import { FullPageLoader, SkeletonLoader } from '../../Loaders/SkeletonLoader';
