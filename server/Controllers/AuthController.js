@@ -44,10 +44,10 @@ exports.githubCallback = async (req, res) => {
         });
 
         req.session.userId = user._id;
-        res.redirect('http://localhost:5173/');
+        res.redirect('https://thankful-dune-02c682800.2.azurestaticapps.net');
     } catch (error) {
         console.error('Error during GitHub authentication:', error.message);
-        res.redirect('http://localhost:5173/login?error=auth_failed');
+        res.redirect('https://thankful-dune-02c682800.2.azurestaticapps.net/login?error=auth_failed');
     }
 };
 
