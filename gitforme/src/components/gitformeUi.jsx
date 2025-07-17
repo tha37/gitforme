@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatIcon, LaptopIcon } from './icons';
 import ChatbotPanel from './Chatbot';
 import RepoDetailView from './RepoDetailView';
 import LandingPageContent from '../PageContent/LandingPageContent';
 import { AppHeader } from '../PageContent/AppHeader';
+import { ChatIcon, LaptopIcon } from './icons';
 
 const GitformeUi = () => {
     const { isAuthenticated, user, logout } = useAuth();
