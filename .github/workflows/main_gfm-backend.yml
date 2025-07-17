@@ -57,3 +57,4 @@ jobs:
           app-name: 'gfm-backend'
           slot-name: 'Production'
           package: .
+
