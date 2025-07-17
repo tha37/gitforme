@@ -1,0 +1,9 @@
+{
+  "platform": {
+    "apiRuntime": "node:18",
+    "appBuildCommand": "npm run build",
+    "appLocation": "gitforme",
+    "outputLocation": "dist"
+  },
+  "engine": "node@20"
+}

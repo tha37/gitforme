@@ -1,12 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import path from 'path'; // <--- ADD THIS LINE
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// vite.config.js
+// https://vitejs.dev/config/
 export default defineConfig({
+  plugins: [react()],
   resolve: {
-    extensions: ['.js', '.jsx', '.json', '.mjs'],
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
-})
+      // Example of where 'path' would be used
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
