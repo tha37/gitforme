@@ -23,7 +23,10 @@ const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
 
 // 1. CORS - Must come early
 app.use(cors({
-  origin: '*',
+  origin: [
+    'https://www.gitforme.tech',
+    'https://thankful-dune-02c682800.2.azurestaticapps.net',
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE' ,'OPTIONS'],
    allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
