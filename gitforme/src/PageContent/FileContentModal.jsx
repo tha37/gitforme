@@ -7,7 +7,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Icon } from '../components/icons';
+import { Icon } from '../components/Iconsfile';
 export const FileContentModal = ({ content, fileName, fileUrl, onClose }) => {
     const isMarkdown = fileName?.toLowerCase().endsWith('.md');
     const language = fileName?.split('.').pop() || 'text';

@@ -7,7 +7,7 @@ import {
     CodeIcon,
     TargetIcon,
     BarChartIcon,
-} from '../components/icons';
+} from '../components/Iconsfile';
 import FeatureCard from '../cards/FeatureCard';
 import StepCard from '../cards/StepCard';
 

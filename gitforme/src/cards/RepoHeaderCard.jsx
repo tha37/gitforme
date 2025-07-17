@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
-import { Icon } from '../components/icons';
+import { Icon } from '../components/Iconsfile';
+
 
 export const RepoHeaderCard = ({ username, reponame, repoData, deployments, onFastClone, onGenerateReport, isReportLoading, onAiChatClick }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);

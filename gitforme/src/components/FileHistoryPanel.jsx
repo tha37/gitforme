@@ -1,5 +1,5 @@
 import { SkeletonLoader } from "../../Loaders/SkeletonLoader";
-import { Icon } from "./icons";
+import { Icon } from "./Iconsfile";
 
 
 export const FileHistoryPanel = ({ file, history, isLoading, onClose }) => {

@@ -8,7 +8,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FileGraph } from './Filegraph';
 import { DirectoryStructure } from './DirectoryStructure';
-import { Icon } from './icons';
+import { Icon } from './Iconsfile';
 import { FullPageLoader, SkeletonLoader } from '../../Loaders/SkeletonLoader';
 import { FileHistoryPanel } from './FileHistoryPanel';
 import { FileContentModal } from '../PageContent/FileContentModal';

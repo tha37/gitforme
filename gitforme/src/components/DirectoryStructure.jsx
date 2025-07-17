@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Icon } from './icons';
+import { Icon } from './Iconsfile';
 
 
 export const DirectoryStructure = ({ tree, onFileSelect, hotspots }) => {
