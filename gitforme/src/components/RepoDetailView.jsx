@@ -341,7 +341,7 @@ BODY: ${issue.body || 'No description.'}
                     <ul className="list-disc list-inside text-gray-600 space-y-2">
                         <li>Ensure the repository is public. This tool does not support private repositories.</li>
                         <li>Double-check the username and repository name in the URL.</li>
-                        <li>For the best experience, we recommend using the Google Chrome browser.</li>
+                        <li>For the best experience, we recommend using the Google Chrome browser.[If you are facing issues in Brave]</li>
                         <li>If the issue persists, it might be a temporary problem with the GitHub API. Please try again later.</li>
                     </ul>
                 </div>
