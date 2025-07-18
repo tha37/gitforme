@@ -5,12 +5,11 @@ export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, s
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b-2 border-black">
         <div className="container mx-auto px-4 md:px-8 py-3">
             <div className="flex justify-between items-center gap-4">
-                {/* Apply the new font here */}
                 <a 
                     href="/" 
                     className="text-2xl sm:text-3xl font-bold tracking-tighter hidden sm:block 
                                font-space-mono text-gray-900 
-                               hover:text-amber-600 transition-colors" // Added a subtle hover effect and stronger color
+                               hover:text-amber-600 transition-colors" 
                 >
                     GitForMe
                 </a>
