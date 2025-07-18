@@ -26,6 +26,8 @@ const GitformeUi = () => {
 
   const [repoUrl, setRepoUrl] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
+  // Added state for Brave browser detection
+  const [isBraveBrowser, setIsBraveBrowser] = useState(false);
 
   const apiServerUrl = import.meta.env.VITE_API_URL;
 
@@ -34,6 +36,16 @@ const GitformeUi = () => {
       setRepoUrl(`https://github.com/${username}/${reponame}`);
     }
   }, [username, reponame]);
+
+  // Effect to check for Brave browser on component mount
+  useEffect(() => {
+    const checkForBrave = async () => {
+      if (navigator.brave && await navigator.brave.isBrave()) {
+        setIsBraveBrowser(true);
+      }
+    };
+    checkForBrave();
+  }, []);
 
   const handleGitHubLogin = () => {
     window.location.href = `${apiServerUrl}/api/auth/github`;
@@ -74,6 +86,15 @@ const GitformeUi = () => {
         setRepoUrl={setRepoUrl} 
         oncook={handleCookRepoUrl} 
       />
+
+      {/* Brave Browser Warning Message */}
+      {isBraveBrowser && !isAuthenticated && (
+        <div className="container mx-auto mt-2 -mb-4">
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-md text-center text-sm">
+                For a better experience, please avoid using the Brave browser for login due to potential compatibility issues.
+            </div>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div 
