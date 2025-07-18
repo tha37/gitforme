@@ -7,6 +7,7 @@ import time
 import requests
 import aiohttp
 import asyncio
+import gc
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from transformers import AutoTokenizer, AutoModel
@@ -14,9 +15,10 @@ from dotenv import load_dotenv
 import torch
 from openai import AzureOpenAI
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
+from collections import deque
 from colorama import Fore, Style
 from urllib.parse import urlparse
+from cachetools import LRUCache 
 
 load_dotenv()
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -48,12 +50,13 @@ EMBEDDING_MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
 try:
     EMBEDDING_TOKENIZER = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
     EMBEDDING_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
+    EMBEDDING_MODEL.to('cpu')
     logging.info("Embedding model and tokenizer loaded successfully.")
 except Exception as e:
     logging.critical(f"Failed to load embedding model: {e}")
     exit()
 
-repo_cache = {}
+repo_cache = LRUCache(maxsize=5)
 global_api_call_times = deque()
 GLOBAL_MAX_CALLS_PER_HOUR = 10
 WINDOW_SECONDS = 3600
@@ -114,7 +117,6 @@ async def get_relevant_context(repo_url, query):
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "GitFormeBot/1.0"}
         repo_info_res = requests.get(f"https://api.github.com/repos/{owner}/{repo}", headers=headers)
         if repo_info_res.status_code != 200:
-            logging.error(f"Failed to fetch repo info for {owner_repo}, status: {repo_info_res.status_code}")
             return None, "Failed to fetch repository info. Please check if the URL is correct and public."
         default_branch = repo_info_res.json().get("default_branch", "main")
         logging.info(f"Fetched repo info in {time.time() - github_api_start_time:.2f}s. Default branch: {default_branch}")
@@ -122,7 +124,6 @@ async def get_relevant_context(repo_url, query):
         tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1"
         tree_res = requests.get(tree_url, headers=headers)
         if tree_res.status_code != 200:
-            logging.error(f"Failed to fetch file tree for {owner_repo}, status: {tree_res.status_code}")
             return None, "Failed to fetch repository file tree."
         logging.info(f"Fetched file tree in {time.time() - github_api_start_time:.2f}s")
 
@@ -131,12 +132,10 @@ async def get_relevant_context(repo_url, query):
             if f['type'] == 'blob' and not f['path'].startswith('.') and f['size'] < 100000
             and f['path'].endswith((
                 '.py', '.js', '.ts', '.tsx', '.go', '.rs', '.java', '.cs', '.php', '.rb',
-                '.json', '.yml', '.yaml', 'Dockerfile',
-                'README.md', 'CONTRIBUTING.md'
+                '.json', '.yml', '.yaml', 'Dockerfile', 'README.md', 'CONTRIBUTING.md'
             ))
         ]
         if not files_to_fetch:
-            logging.warning(f"No relevant code or documentation files found in {owner_repo}.")
             return None, "No relevant code or documentation files were found in this repository."
         logging.info(f"Identified {len(files_to_fetch)} files to fetch content for.")
 
@@ -155,7 +154,6 @@ async def get_relevant_context(repo_url, query):
             for f, content in zip(files_to_fetch, raw_contents) if content
         }
         if not file_summaries:
-            logging.error(f"Failed to load content from any relevant files for {owner_repo} after download.")
             return None, "Failed to load content from any relevant files."
         logging.info(f"Summarized {len(file_summaries)} files in {time.time() - summarize_start_time:.2f}s.")
 
@@ -163,10 +161,10 @@ async def get_relevant_context(repo_url, query):
         code_chunks = list(file_summaries.values())
 
         embedding_start_time = time.time()
-        encoded = EMBEDDING_TOKENIZER(code_chunks, padding=True, truncation=True, return_tensors='pt', max_length=512)
-        with torch.no_grad():
+        with torch.inference_mode():
+            encoded = EMBEDDING_TOKENIZER(code_chunks, padding=True, truncation=True, return_tensors='pt', max_length=512)
             output = EMBEDDING_MODEL(**encoded)
-        embeddings = output.last_hidden_state.mean(dim=1).cpu().numpy().astype('float32')
+            embeddings = output.last_hidden_state.mean(dim=1).cpu().numpy().astype('float32')
         logging.info(f"Generated {len(embeddings)} embeddings in {time.time() - embedding_start_time:.2f}s.")
 
         faiss_index_start_time = time.time()
@@ -176,11 +174,12 @@ async def get_relevant_context(repo_url, query):
 
         repo_cache[owner_repo] = {"index": index, "chunks": code_chunks, "paths": file_paths}
         cache_data = repo_cache[owner_repo]
-        logging.info(f"Repo '{owner_repo}' added to in-memory cache.")
+        logging.info(f"Repo '{owner_repo}' added to in-memory LRU cache. Current cache size: {len(repo_cache)}/{repo_cache.maxsize}")
+        gc.collect()
 
     query_embedding_start_time = time.time()
-    encoded_query = EMBEDDING_TOKENIZER([query], return_tensors='pt', padding=True, truncation=True, max_length=512)
-    with torch.no_grad():
+    with torch.inference_mode():
+        encoded_query = EMBEDDING_TOKENIZER([query], return_tensors='pt', padding=True, truncation=True, max_length=512)
         query_emb = EMBEDDING_MODEL(**encoded_query).last_hidden_state.mean(dim=1).cpu().numpy().astype('float32')
     logging.info(f"Generated query embedding in {time.time() - query_embedding_start_time:.2f}s.")
 
@@ -189,7 +188,6 @@ async def get_relevant_context(repo_url, query):
     logging.info(f"Performed FAISS search in {time.time() - faiss_search_start_time:.2f}s.")
 
     context = "\n\n".join([f"--- Context from file: {cache_data['paths'][idx]} ---\n{cache_data['chunks'][idx]}" for idx in top_indices[0]])
-    
     logging.info(f"Total time for get_relevant_context: {time.time() - total_start_time:.2f}s.")
     return context, None
 
@@ -251,11 +249,9 @@ Please provide your analysis based on these rules and context."""
 async def chat():
     request_start_time = time.time()
     logging.info(f"Received request from {request.remote_addr} at /api/chat.")
-
     now = datetime.utcnow()
     while global_api_call_times and now - global_api_call_times[0] > timedelta(seconds=WINDOW_SECONDS):
         global_api_call_times.popleft()
-    
     if len(global_api_call_times) >= GLOBAL_MAX_CALLS_PER_HOUR:
         logging.warning(f"Global rate limit of {GLOBAL_MAX_CALLS_PER_HOUR}/hour exceeded for {request.remote_addr}.")
         retry_after_seconds = (global_api_call_times[0] + timedelta(seconds=WINDOW_SECONDS) - now).total_seconds()
@@ -265,37 +261,28 @@ async def chat():
         response.headers['Retry-After'] = str(int(retry_after_seconds))
         logging.info(f"Rate limit response sent in {time.time() - request_start_time:.2f}s.")
         return response, 429
-    
     global_api_call_times.append(now)
-
     data = request.get_json()
     query = data.get("query")
     repo_id = data.get("repoId")
-
     if not query or not repo_id:
         logging.error("Missing query or repoId in request.")
         return jsonify({"error": "Missing query or repoId"}), 400
-    
     try:
         owner, repo = extract_owner_repo(repo_id)
         repo_url = f"https://github.com/{owner}/{repo}"
     except ValueError as e:
         logging.error(f"Invalid repoId format: {repo_id}. Error: {e}")
         return jsonify({"error": str(e)}), 400
-    
     logging.info(f"Processing query '{query}' for repo '{repo_id}'.")
-    
     context, error = await get_relevant_context(repo_url, query)
-    
     if error:
         logging.error(f"Error getting context for '{repo_id}': {error}")
         return jsonify({"error": error}), 500
-    
     logging.info(f"Context retrieved successfully. Total request processing time before streaming: {time.time() - request_start_time:.2f}s.")
-    
     return Response(stream_llm_response(context, query, repo_url), mimetype='text/event-stream')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
     logging.info(f"Starting Flask app on 0.0.0.0:{port}")
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=port)
