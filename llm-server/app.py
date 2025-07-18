@@ -43,8 +43,8 @@ logging.getLogger().setLevel(logging.INFO)
 
 app = Flask(__name__)
 allowed_origins = [
-    "http://localhost:3000", # Example for local React dev
-    "http://localhost:5173", # Example for local Vite dev
+    "http://localhost:3000", 
+    "http://localhost:5173", 
     "https://gitforme.tech"
 ]
 CORS(app, origins=allowed_origins, supports_credentials=True)

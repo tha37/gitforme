@@ -20,7 +20,8 @@ const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
 const allowedOrigins = [
   'https://www.gitforme.tech',
   'https://thankful-dune-02c682800.2.azurestaticapps.net',
-  'https://gitforme-bot.onrender.com'
+  'https://gitforme-bot.onrender.com',
+  'https://gitforme.onrender.com'
 ];
 app.use(cors({
   origin: function (origin, callback) {
