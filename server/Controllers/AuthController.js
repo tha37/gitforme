@@ -46,11 +46,11 @@ exports.githubCallback = async (req, res) => {
         req.session.userId = user._id;
 
         // Redirect back to the frontend
-        res.redirect('https://gitforme-jbsp.vercel.app/');
+        res.redirect('https://www.gitforme.tech/');
 
     } catch (error) {
         console.error('Error during GitHub authentication:', error.message);
-        res.redirect('https://gitforme-jbsp.vercel.app/login?error=auth_failed');
+        res.redirect('https://www.gitforme.tech/login?error=auth_failed');
     }
 };
 
