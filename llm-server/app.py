@@ -42,7 +42,12 @@ logging.getLogger().handlers = [handler]
 logging.getLogger().setLevel(logging.INFO)
 
 app = Flask(__name__)
-CORS(app, origins="*", supports_credentials=True)
+allowed_origins = [
+    "http://localhost:3000", # Example for local React dev
+    "http://localhost:5173", # Example for local Vite dev
+    "https://gitforme.tech"
+]
+CORS(app, origins=allowed_origins, supports_credentials=True)
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app.config['DEBUG'] = True
 
