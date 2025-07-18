@@ -89,6 +89,5 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 app.use((req, res) => res.status(404).json({ error: "Route not found" }));
-
 // --- Server Start ---
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
