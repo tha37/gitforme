@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -6,6 +6,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+// Assuming these are your actual, fully implemented components
 import { FileGraph } from './FileGraph';
 import { DirectoryStructure } from './DirectoryStructure';
 import { Icon } from './Iconsfile';
@@ -22,9 +24,80 @@ import { ReportModal } from './ReportModal';
 import { GoodFirstIssues } from '../cards/GoodFirstIssues';
 import { DependencyDashboard } from './DependencyDashboard';
 
+
+/**
+ * A robust helper to copy text to the clipboard, with a fallback for older browsers
+ * or insecure contexts (like http).
+ * @param {string} text The text to copy.
+ */
+const copyToClipboard = (text) => {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+            .then(() => toast.success("Context copied to clipboard!"))
+            .catch(() => toast.error("Failed to copy using modern API."));
+    } else {
+        // Fallback for iFrames or non-https environments
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                toast.success("Context copied to clipboard!");
+            } else {
+                toast.error("Fallback copy command failed.");
+            }
+        } catch (err) {
+            toast.error("An error occurred during fallback copy.");
+        }
+        document.body.removeChild(textArea);
+    }
+};
+
+/**
+ * Converts a flat list of file paths from the Git Tree API into a nested,
+ * hierarchical structure suitable for tree view components.
+ * @param {Array} flatList - The array of file objects from the GitHub API.
+ * @returns {Array} A nested array of nodes.
+ */
+const buildHierarchy = (flatList) => {
+    if (!flatList || flatList.length === 0) return [];
+    const tree = [];
+    const map = new Map();
+
+    flatList.forEach(node => {
+        const name = node.path.split('/').pop();
+        map.set(node.path, { ...node, name, children: [] });
+    });
+
+    map.forEach(node => {
+        const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
+        const parent = map.get(parentPath);
+        if (parent) {
+            parent.children.push(node);
+        } else {
+            tree.push(node);
+        }
+    });
+
+    map.forEach(node => {
+        if (node.children.length === 0 && node.type === 'blob') {
+            delete node.children;
+        }
+    });
+
+    return tree;
+};
+
+
 const RepoDetailView = () => {
     const { username, reponame } = useParams();
 
+    // State management for all repository data and UI status
     const [repoData, setRepoData] = useState({});
     const [readmeContent, setReadmeContent] = useState('');
     const [hierarchicalTree, setHierarchicalTree] = useState([]);
@@ -38,7 +111,7 @@ const RepoDetailView = () => {
     const [dependencyHealth, setDependencyHealth] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('directory'); // Default to directory view
+    const [activeTab, setActiveTab] = useState('directory');
     const [focusedNode, setFocusedNode] = useState(null);
     const [selectedFileForHistory, setSelectedFileForHistory] = useState(null);
     const [commitHistory, setCommitHistory] = useState([]);
@@ -51,62 +124,51 @@ const RepoDetailView = () => {
     const [isReportLoading, setIsReportLoading] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
 
-
     useEffect(() => {
-        const buildHierarchy = (flatList) => {
-            if (!flatList || flatList.length === 0) return [];
-            const tree = [];
-            const map = new Map(flatList.map(node => [node.path, { ...node, name: node.path.split('/').pop(), children: [] }]));
-            map.forEach(node => {
-                const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
-                const parent = map.get(parentPath);
-                if (parent) parent.children.push(node);
-                else tree.push(node);
-            });
-            map.forEach(node => { if (node.children.length === 0) delete node.children; });
-            return tree;
-        };
-
         const fetchData = async () => {
             setIsLoading(true);
             setError(null);
             try {
                 const apiServerUrl = import.meta.env.VITE_API_URL;
-        
-        const apiBase = `${apiServerUrl}/api/github/${username}/${reponame}`;
+                const apiBase = `${apiServerUrl}/api/github/${username}/${reponame}`;
+
                 const repoRes = await axios.get(apiBase, { withCredentials: true });
                 const defaultBranch = repoRes.data.default_branch || 'main';
 
-                const [readmeRes, treeRes, contributorsRes, deploymentsRes, issuesRes, goodFirstIssuesRes, insightsRes, hotspotsRes, dependenciesRes] = await Promise.all([
-                    axios.get(`${apiBase}/readme`, { withCredentials: true }).catch(() => ({ data: { content: '' } })),
-                    axios.get(`${apiBase}/git/trees/${defaultBranch}?recursive=1`, { withCredentials: true }).catch(() => ({ data: { tree: [] } })),
-                    axios.get(`${apiBase}/contributors`, { withCredentials: true }).catch(() => ({ data: [] })),
-                    axios.get(`${apiBase}/deployments`, { withCredentials: true }).catch(() => ({ data: [] })),
-                    axios.get(`${apiBase}/issues`, { withCredentials: true }).catch(() => ({ data: { open: [], closed: [] } })),
-                    axios.get(`${apiBase}/good-first-issues`, { withCredentials: true }).catch(() => ({ data: [] })),
-                    axios.get(`${apiBase}/insights`, { withCredentials: true }).catch(() => ({ data: null })),
-                    axios.get(`${apiBase}/hotspots`, { withCredentials: true }).catch(() => ({ data: [] })),
-                    axios.get(`${apiBase}/insights/dependencies`, { withCredentials: true }).catch(() => ({ data: null }))
+                const results = await Promise.allSettled([
+                    axios.get(`${apiBase}/readme`, { withCredentials: true }),
+                    axios.get(`${apiBase}/git/trees/${defaultBranch}?recursive=1`, { withCredentials: true }),
+                    axios.get(`${apiBase}/contributors`, { withCredentials: true }),
+                    axios.get(`${apiBase}/deployments`, { withCredentials: true }),
+                    axios.get(`${apiBase}/issues`, { withCredentials: true }),
+                    axios.get(`${apiBase}/good-first-issues`, { withCredentials: true }),
+                    axios.get(`${apiBase}/insights`, { withCredentials: true }),
+                    axios.get(`${apiBase}/hotspots`, { withCredentials: true }),
+                    axios.get(`${apiBase}/insights/dependencies`, { withCredentials: true })
                 ]);
 
+                const getData = (result, defaultValue) => result.status === 'fulfilled' ? result.value.data : defaultValue;
+
                 setRepoData(repoRes.data);
-                setReadmeContent(readmeRes.data.content ? atob(readmeRes.data.content) : '# No README found');
-                const treeData = treeRes.data.tree || [];
+                const readmeData = getData(results[0], { content: '' });
+                setReadmeContent(readmeData.content ? atob(readmeData.content) : '# No README found');
+                const treeData = getData(results[1], { tree: [] }).tree || [];
                 setFlatTree(treeData);
                 setHierarchicalTree(buildHierarchy(treeData));
-                setContributors(contributorsRes.data || []);
-                setIssues(issuesRes.data);
-                setGoodFirstIssues(goodFirstIssuesRes.data);
-                setInsights(insightsRes.data);
-                setHotspots(hotspotsRes.data);
-                setDependencyHealth(dependenciesRes.data);
+                setContributors(getData(results[2], []));
+                const deploymentsData = getData(results[3], []);
+                setIssues(getData(results[4], { open: [], closed: [] }));
+                setGoodFirstIssues(getData(results[5], []));
+                setInsights(getData(results[6], null));
+                setHotspots(getData(results[7], []));
+                setDependencyHealth(getData(results[8], null));
 
                 const activeDeployments = [];
                 if (repoRes.data.homepage) {
                     activeDeployments.push({ url: repoRes.data.homepage, environment: 'Homepage' });
                 }
-                if (deploymentsRes.data && deploymentsRes.data.length > 0) {
-                    deploymentsRes.data.forEach(dep => {
+                if (deploymentsData.length > 0) {
+                    deploymentsData.forEach(dep => {
                         if (!activeDeployments.some(d => d.url === dep.url)) {
                             activeDeployments.push(dep);
                         }
@@ -115,13 +177,78 @@ const RepoDetailView = () => {
                 setDeployments(activeDeployments);
 
             } catch (err) {
-                setError(err.message || 'Failed to fetch repository data');
+                let errorMessage = 'An unexpected error occurred.';
+                if (axios.isAxiosError(err) && err.response) {
+                    switch (err.response.status) {
+                        case 404:
+                            errorMessage = `Repository not found. Please ensure '${username}/${reponame}' is a valid public repository.`;
+                            break;
+                        case 403:
+                            errorMessage = 'Access forbidden. This could be due to GitHub API rate limits or repository permissions. Please try again later.';
+                            break;
+                        case 401:
+                            errorMessage = 'Authentication error. Please ensure you are logged in and have the necessary permissions.';
+                            break;
+                        default:
+                            errorMessage = `Failed to fetch repository data. Server responded with status ${err.response.status}.`;
+                    }
+                } else if (err instanceof Error) {
+                    errorMessage = err.message;
+                }
+                setError(errorMessage);
+                toast.error(errorMessage);
             } finally {
                 setIsLoading(false);
             }
         };
         fetchData();
     }, [username, reponame]);
+
+    const handleFileSelect = useCallback(async (fileNode) => {
+        if (fileNode.type === 'tree') {
+            setFocusedNode(fileNode);
+            return;
+        }
+
+        const apiServerUrl = import.meta.env.VITE_API_URL;
+        const apiBase = `${apiServerUrl}/api/github/${username}/${reponame}`;
+
+        // Fetch file content via backend
+        try {
+            const contentRes = await axios.get(`${apiBase}/contents/${fileNode.path}`, {
+                withCredentials: true,
+            });
+            const fileUrl = `https://github.com/${username}/${reponame}/blob/HEAD/${fileNode.path}`;
+            setModalState({ isOpen: true, content: contentRes.data, fileName: fileNode.path, fileUrl });
+        } catch (err) {
+            console.error("Failed to fetch file content:", err);
+            toast.error("Could not load file content. It might be binary, too large, or empty.");
+        }
+
+        // Fetch commit history for the selected file
+        setSelectedFileForHistory({ ...fileNode, owner: username, repo: reponame });
+        setIsHistoryLoading(true);
+        setCommitHistory([]);
+        try {
+            const historyRes = await axios.get(`${apiBase}/commits`, {
+                params: { path: fileNode.path },
+                withCredentials: true,
+            });
+            setCommitHistory(historyRes.data);
+        } catch (err) {
+            console.error("Failed to fetch commit history:", err);
+            toast.error("Could not load commit history for this file.");
+        } finally {
+            setIsHistoryLoading(false);
+        }
+    }, [username, reponame]);
+
+    const formatDuration = (ms) => {
+        if (ms === null || ms === undefined) return 'N/A';
+        const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        return `${days}d ${hours}h`;
+    };
 
     const handleAddSingleIssueToContext = (issue) => {
         const issueContext = `
@@ -149,118 +276,49 @@ BODY: ${issue.body || 'No description.'}
     const handleGenerateReport = () => {
         setIsReportLoading(true);
         setIsReportModalOpen(true);
-        setReportContent('');
+        
+        let md = `# 📊 Repository Report: ${repoData.full_name}\n\n`;
+        md += `_${repoData.description}_\n\n`;
+        md += `**URL:** [${repoData.html_url}](${repoData.html_url})\n`;
+        md += `**Language:** ${repoData.language} | **Stars:** ${repoData.stargazers_count?.toLocaleString()} | **Forks:** ${repoData.forks_count?.toLocaleString()}\n\n`;
 
-        const formatDuration = (ms) => {
-            if (ms === null || ms === undefined) return 'N/A';
-            const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            return `${days}d ${hours}h`;
-        };
+        md += `## 🚀 Key Insights\n`;
+        if (insights) {
+            md += `- **Average PR Merge Time:** ${formatDuration(insights.averageMergeTime)}\n`;
+            md += `- **PR Acceptance Rate:** ${insights.acceptanceRate || '0'}%\n`;
+            md += `_Based on the last ${insights.totalClosed || 0} closed PRs._\n\n`;
+        } else {
+            md += `_No PR insights available._\n\n`;
+        }
 
-        setTimeout(() => {
-            let md = `# 📊 Repository Report: ${repoData.full_name}\n\n`;
-            md += `_${repoData.description}_\n\n`;
-            md += `**URL:** [${repoData.html_url}](${repoData.html_url})\n`;
-            md += `**Language:** ${repoData.language} | **Stars:** ${repoData.stargazers_count?.toLocaleString()} | **Forks:** ${repoData.forks_count?.toLocaleString()}\n\n`;
-
-            md += `## 🚀 Key Insights\n`;
-            if (insights) {
-                md += `- **Average PR Merge Time:** ${formatDuration(insights.averageMergeTime)}\n`;
-                md += `- **PR Acceptance Rate:** ${insights.acceptanceRate || '0'}%\n`;
-                md += `_Based on the last ${insights.totalClosed || 0} closed PRs._\n\n`;
-            } else {
-                md += `_No PR insights available._\n\n`;
-            }
-
-            md += `## 📦 Dependency Health\n`;
-            if (dependencyHealth && !dependencyHealth.error) {
-                md += `- **Total Dependencies:** ${dependencyHealth.summary.total}\n`;
-                md += `- **Outdated:** ${dependencyHealth.summary.outdated}\n`;
-                md += `- **Deprecated:** ${dependencyHealth.summary.deprecated}\n\n`;
-            } else {
-                md += `_Dependency health could not be determined._\n\n`;
-            }
-
-            md += `## 🔥 Code Hotspots (Top 5)\n`;
-            if (hotspots && hotspots.length > 0) {
-                const topHotspots = [...hotspots].sort((a, b) => b.churn - a.churn).slice(0, 5);
-                topHotspots.forEach(h => { md += `- **${h.path}** (${h.churn} changes)\n`; });
-                md += `\n`;
-            } else {
-                md += `_No hotspot data available._\n\n`;
-            }
-
-            md += `## 👥 Top Contributors (Top 5)\n`;
-            if (contributors && contributors.length > 0) {
-                const topContributors = contributors.slice(0, 5);
-                topContributors.forEach(c => { md += `- **${c.login}** (${c.contributions} contributions)\n`; });
-                md += `\n`;
-            } else {
-                md += `_No contributor data available._\n\n`;
-            }
-
-            md += `## 📄 README Summary\n`;
-            if (readmeContent && readmeContent !== '# No README found') {
-                const summary = readmeContent.substring(0, 400);
-                md += `\`\`\`\n${summary}...\n\`\`\`\n`;
-            } else {
-                md += `_No README found._\n\n`;
-            }
-
-            setReportContent(md);
-            setIsReportLoading(false);
-        }, 500);
+        md += `## 🔥 Code Hotspots (Top 5)\n`;
+        if (hotspots && hotspots.length > 0) {
+            [...hotspots].sort((a, b) => b.churn - a.churn).slice(0, 5).forEach(h => { md += `- **${h.path}** (${h.churn} changes)\n`; });
+        } else {
+            md += `_No hotspot data available._\n\n`;
+        }
+        
+        setReportContent(md);
+        setIsReportLoading(false);
     };
 
     const handleCreateSuperContext = () => {
         toast.info("Generating Super Context...");
         let context = `## 🚀 Repository Overview: ${repoData.full_name}\n`;
         context += `**Description:** ${repoData.description}\n`;
-        context += `**Primary Language:** ${repoData.language}\n`;
-        context += `**URL:** ${repoData.html_url}\n\n`;
-
-        if (insights) {
-            context += `## 📊 Project Insights\n`;
-            const formatDuration = (ms) => {
-                if (ms === null || ms === undefined) return 'N/A';
-                const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                return `${days}d ${hours}h`;
-            };
-            context += `- **Average PR Merge Time:** ${formatDuration(insights.averageMergeTime)}\n`;
-            context += `- **PR Acceptance Rate:** ${insights.acceptanceRate || '0'}%\n\n`;
-        }
+        context += `**Primary Language:** ${repoData.language}\n\n`;
 
         if (hotspots && hotspots.length > 0) {
             context += `## 🔥 Code Hotspots (Most Changed Files)\n`;
-            const topHotspots = [...hotspots].sort((a, b) => b.churn - a.churn).slice(0, 10);
-            topHotspots.forEach(h => { context += `- ${h.path} (${h.churn} changes)\n`; });
+            [...hotspots].sort((a, b) => b.churn - a.churn).slice(0, 10).forEach(h => { context += `- ${h.path} (${h.churn} changes)\n`; });
             context += `\n`;
         }
 
         if (flatTree && flatTree.length > 0) {
             context += `## 📁 File Structure\n`;
-            const filesToList = flatTree.map(file => `- ${file.path}`);
-            context += filesToList.join('\n') + '\n\n';
+            context += flatTree.map(file => `- ${file.path}`).join('\n') + '\n\n';
         }
-
-        if (dependencyHealth && !dependencyHealth.error) {
-            context += `## 📦 Dependencies\n`;
-            context += `**Summary:** Total: ${dependencyHealth.summary.total}, Outdated: ${dependencyHealth.summary.outdated}, Deprecated: ${dependencyHealth.summary.deprecated}\n`;
-            if (dependencyHealth.dependencies.length > 0) {
-                const allDeps = dependencyHealth.dependencies.map(d => `- ${d.name}: ${d.version}`);
-                context += `**Dependency List:**\n${allDeps.join('\n')}\n`;
-            }
-            context += `\n`;
-        }
-
-        if (goodFirstIssues && goodFirstIssues.length > 0) {
-            context += `## 🌱 Good First Issues\n`;
-            const issuesToList = goodFirstIssues.slice(0, 5).map(issue => `- #${issue.number}: ${issue.title}`);
-            context += issuesToList.join('\n') + '\n\n';
-        }
-
+        
         if (readmeContent) {
             context += `## 📄 README.md\n`;
             context += '```\n' + readmeContent + '\n```\n';
@@ -270,50 +328,24 @@ BODY: ${issue.body || 'No description.'}
         toast.success("Super Context created and ready to copy!");
     };
 
-
-    const handleFileSelect = async (fileNode) => {
-        if (fileNode.type === 'tree') {
-            setFocusedNode(fileNode);
-            return;
-        }
-
-        try {
-            const contentRes = await axios.get(`https://api.github.com/repos/${username}/${reponame}/contents/${fileNode.path}`, {
-                headers: { Accept: 'application/vnd.github.v3.raw' }
-            });
-            const fileUrl = `https://github.com/${username}/${reponame}/blob/HEAD/${fileNode.path}`;
-            setModalState({ isOpen: true, content: contentRes.data, fileName: fileNode.path, fileUrl });
-        } catch (err) {
-            console.error("Failed to fetch file content:", err);
-            toast.error("Could not load file content. It might be binary or empty.");
-        }
-
-        setSelectedFileForHistory({ ...fileNode, owner: username, repo: reponame });
-        setIsHistoryLoading(true);
-        setCommitHistory([]);
-        try {
-        const apiServerUrl = import.meta.env.VITE_API_URL;
-
-            const historyRes = await axios.get(`${apiServerUrl}/api/github/${username}/${reponame}/commits`, {
-                params: { path: fileNode.path },
-                withCredentials: true,
-            });
-            setCommitHistory(historyRes.data);
-        } catch (err) {
-            console.error("Failed to fetch commit history:", err);
-            toast.error("Could not load commit history for this file.");
-        } finally {
-            setIsHistoryLoading(false);
-        }
-    };
-
     if (isLoading) return <FullPageLoader />;
 
     if (error) return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-red-50 p-4">
-            <div className="text-5xl mb-4">🚫</div>
-            <p className="text-center text-red-600 font-semibold text-2xl">Login to start cooking : </p>
-            <p className="text-gray-600 mt-2 text-lg">{error}</p>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center font-sans">
+            <div className="bg-white border-2 border-red-400 rounded-xl shadow-[8px_8px_0px_rgba(239,68,68,0.5)] p-8 max-w-lg w-full">
+                <div className="text-5xl mb-4">🚫</div>
+                <h2 className="text-3xl font-bold text-red-600 mb-3">Oops! Something Went Wrong</h2>
+                <p className="text-gray-700 text-lg mb-6 bg-red-50 p-3 border border-red-200 rounded-lg">{error}</p>
+                <div className="text-left bg-gray-100 p-4 rounded-lg border border-gray-300">
+                    <h3 className="font-bold text-gray-800 mb-2">Troubleshooting Tips:</h3>
+                    <ul className="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Ensure the repository is **public**. This tool does not support private repositories.</li>
+                        <li>Double-check the username and repository name in the URL.</li>
+                        <li>For the best experience, we recommend using the **Google Chrome** browser.</li>
+                        <li>If the issue persists, it might be a temporary problem with the GitHub API. Please try again later.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     );
 
@@ -331,7 +363,6 @@ BODY: ${issue.body || 'No description.'}
             <FileHistoryPanel file={selectedFileForHistory} history={commitHistory} isLoading={isHistoryLoading} onClose={() => setSelectedFileForHistory(null)} />
             {storyModalIssue && <FeatureStoryModal issue={storyModalIssue} username={username} reponame={reponame} onClose={() => setStoryModalIssue(null)} onAddContext={handleAddFullStoryToContext} />}
             <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} reportContent={reportContent} isLoading={isReportLoading} />
-
 
             <RepoHeaderCard {...{ username, reponame, repoData, deployments, onFastClone: handleFastClone, onGenerateReport: handleGenerateReport, isReportLoading, onAiChatClick: () => setIsChatOpen(true) }} />
 
@@ -376,10 +407,7 @@ BODY: ${issue.body || 'No description.'}
                                 ✨ Create Super Context
                             </button>
                             <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(llmContext);
-                                    toast.success("Context copied to clipboard!");
-                                }}
+                                onClick={() => copyToClipboard(llmContext)}
                                 disabled={!llmContext}
                                 className="w-full px-4 py-3 bg-black text-white font-bold rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed text-base"
                             >
@@ -396,11 +424,11 @@ BODY: ${issue.body || 'No description.'}
                         <ContributorsList contributors={contributors} />
                     </AccordionCard>
 
-            <AccordionCard title="README.md" icon="📄" defaultOpen={false}>
-    <div className="prose prose-lg max-w-none overflow-y-auto max-h-[60vh] bg-[#FEF9F2] p-4 rounded-lg border-2 border-gray-200">
-        <ReactMarkdown>{readmeContent}</ReactMarkdown>
-    </div>
-</AccordionCard>
+                    <AccordionCard title="README.md" icon="📄" defaultOpen={false}>
+                        <div className="prose prose-lg max-w-none overflow-y-auto max-h-[60vh] bg-[#FEF9F2] p-4 rounded-lg border-2 border-gray-200">
+                            <ReactMarkdown>{readmeContent}</ReactMarkdown>
+                        </div>
+                    </AccordionCard>
                 </div>
             </div>
         </div>
