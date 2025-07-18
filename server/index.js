@@ -10,9 +10,8 @@ const authRoute = require("./Routes/AuthRoute");
 const repoRoute = require("./Routes/RepoRoutes");
 const insightsRoutes = require('./Routes/InsightRoutes'); 
 const { requireAuth } = require("./Middlewares/AuthMiddleware");
-
+const PORT = process.env.PORT;
 const app = express();
-const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1); 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 redisClient.on('connect', () => console.log('Connected to Redis'));
@@ -89,5 +88,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 app.use((req, res) => res.status(404).json({ error: "Route not found" }));
+// const PORT = process.env.PORT || 3000;
 // --- Server Start ---
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
