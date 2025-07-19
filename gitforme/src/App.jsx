@@ -6,7 +6,7 @@ import GitformeUi from './components/gitformeUi';
 import Login from '../pages/Login';
 import RepoPage from '../pages/gitpage';
 import ProtectedRoute from './components/ProtectedRoute';
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   return (
