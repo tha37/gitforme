@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['react-hot-toast']
+    include: ['react-hot-toast','@vercel/analytics', '@vercel/speed-insights']
   },
   build: {
     commonjsOptions: {
