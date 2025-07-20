@@ -19,6 +19,40 @@ const LaptopIcon = () => (
   </svg>
 );
 
+// --- Login Prompt Modal Component ---
+const LoginPromptModal = ({ onLogin, onClose }) => (
+    <motion.div
+        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+    >
+        <motion.div
+            className="bg-white rounded-lg p-8 shadow-2xl text-center max-w-sm"
+            initial={{ scale: 0.8, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.8, y: 20 }}
+        >
+            <h2 className="text-2xl font-bold mb-3 text-gray-800">Usage Limit Reached</h2>
+            <p className="text-gray-600 mb-6">
+                You've reached your free usage limit, or the public GitHub API rate limit was exceeded. Please log in to continue.
+            </p>
+            <button
+                onClick={onLogin}
+                className="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition-colors duration-300"
+            >
+                Login with GitHub
+            </button>
+            <button
+                onClick={onClose}
+                className="mt-3 text-sm text-gray-500 hover:underline"
+            >
+                Close
+            </button>
+        </motion.div>
+    </motion.div>
+);
+
 const GitformeUi = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
@@ -26,9 +60,9 @@ const GitformeUi = () => {
 
   const [repoUrl, setRepoUrl] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
-  // Added state for Brave browser detection
   const [isBraveBrowser, setIsBraveBrowser] = useState(false);
-
+    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+    const UNAUTHENTICATED_USAGE_LIMIT = 2;
   const apiServerUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -37,7 +71,7 @@ const GitformeUi = () => {
     }
   }, [username, reponame]);
 
-  // Effect to check for Brave browser on component mount
+  
   useEffect(() => {
     const checkForBrave = async () => {
       if (navigator.brave && await navigator.brave.isBrave()) {
@@ -56,29 +90,55 @@ const GitformeUi = () => {
     navigate('/');
   };
 
-  const handleCookRepoUrl = () => {
-    if (!repoUrl) {
-      alert('Please enter a GitHub repository URL.');
-      return;
-    }
-    try {
-      const url = new URL(repoUrl);
-      const pathParts = url.pathname.split('/').filter(part => part);
-      if (pathParts.length >= 2) {
-        navigate(`/${pathParts[0]}/${pathParts[1]}`);
-      } else {
-        alert('Invalid GitHub repository URL format. Example: https://github.com/owner/repo');
-      }
-    } catch (e) {
-      alert('Invalid URL format. Please enter a valid URL.');
-    }
-  };
+  // 3. Updated function to handle usage limits
+    const handleCookRepoUrl = () => {
+        if (!repoUrl) {
+            alert('Please enter a GitHub repository URL.');
+            return;
+        }
+        try {
+            const url = new URL(repoUrl);
+            const pathParts = url.pathname.split('/').filter(part => part);
+
+            if (pathParts.length < 2) {
+                alert('Invalid GitHub repository URL format. Example: https://github.com/owner/repo');
+                return;
+            }
+
+            const repoIdentifier = `${pathParts[0]}/${pathParts[1]}`;
+
+            // Check usage limit only if the user is not authenticated
+            if (!isAuthenticated) {
+                const viewedRepos = JSON.parse(localStorage.getItem('viewedRepos') || '[]');
+                
+                // If repo is new and limit is reached, show prompt
+                if (!viewedRepos.includes(repoIdentifier) && viewedRepos.length >= UNAUTHENTICATED_USAGE_LIMIT) {
+                    setShowLoginPrompt(true);
+                    return;
+                }
+
+                // If repo is new and limit is not reached, add it to tracking
+                if (!viewedRepos.includes(repoIdentifier)) {
+                    viewedRepos.push(repoIdentifier);
+                    localStorage.setItem('viewedRepos', JSON.stringify(viewedRepos));
+                }
+            }
+
+            // Proceed to the repo page
+            navigate(`/${pathParts[0]}/${pathParts[1]}`);
+        } catch (e) {
+            alert('Invalid URL format. Please enter a valid URL.');
+        }
+    };
+      const handleApiError = () => {
+        if (!isAuthenticated) {
+            setShowLoginPrompt(true);
+        }
+    };
 
   return (
     <div className="bg-[#FDFCFB] bg-[radial-gradient(#d1d1d1_1px,transparent_1px)] [background-size:24px_24px] min-h-screen font-sans text-gray-800 relative">
-      
       <canvas id="codeCanvas" className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20"></canvas>
-      
       <AppHeader 
         isAuthenticated={isAuthenticated} 
         user={user} 
@@ -97,9 +157,15 @@ const GitformeUi = () => {
             </div>
         </div>
       )}
-
+ <AnimatePresence>
+                {showLoginPrompt && (
+                    <LoginPromptModal 
+                        onLogin={handleGitHubLogin}
+                        onClose={() => setShowLoginPrompt(false)}
+                    />
+                )}
+            </AnimatePresence>
       <AnimatePresence mode="wait">
-        
         <motion.div 
           key={username && reponame ? "repo-view-active" : "landing-view-active"}
           initial={{ opacity: 0, scale: 0.98, filter: 'blur(5px)' }}
@@ -118,16 +184,15 @@ const GitformeUi = () => {
               animate={{opacity: 1}} 
               exit={{opacity: 0}}
             >
-              <RepoDetailView />
+            <RepoDetailView onApiError={handleApiError} />
+
             </motion.main>
           )}
         </motion.div>
       </AnimatePresence>
       
       <footer className="text-center py-8 px-4 mt-16 border-t-2 border-black bg-white/50">
-        <div className="flex flex-col items-center gap-4"> {/* Increased gap for better spacing */}
-          {/* Product Hunt Badge */}
-        
+        <div className="flex flex-col items-center gap-3">
           <p className="flex items-center gap-2 text-gray-600 font-medium">
             Inspired by: <a href="https://gitingest.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Gitingest.com</a>
           </p>
