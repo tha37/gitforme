@@ -52,7 +52,20 @@ export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, s
                             <GitHubIcon />
                             <span className="hidden md:inline">Login</span>
                         </button>
+                        
                     )}
+        <div className="flex flex-col items-center">
+          {/* Product Hunt Badge */}
+          <a href="https://www.producthunt.com/products/gitforme?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-gitforme" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=995370&theme=neutral&t=1753038206402" 
+              alt="GitForme - Understand any GitHub repository in minutes, not days. | Product Hunt" 
+              style={{width: '150px', height: '35px'}} 
+              width="250" 
+              height="54" 
+            />
+          </a>
+        </div>
                 </div>
             </div>
         </div>

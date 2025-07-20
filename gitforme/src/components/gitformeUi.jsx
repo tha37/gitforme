@@ -76,7 +76,9 @@ const GitformeUi = () => {
 
   return (
     <div className="bg-[#FDFCFB] bg-[radial-gradient(#d1d1d1_1px,transparent_1px)] [background-size:24px_24px] min-h-screen font-sans text-gray-800 relative">
+      
       <canvas id="codeCanvas" className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20"></canvas>
+      
       <AppHeader 
         isAuthenticated={isAuthenticated} 
         user={user} 
@@ -97,6 +99,7 @@ const GitformeUi = () => {
       )}
 
       <AnimatePresence mode="wait">
+        
         <motion.div 
           key={username && reponame ? "repo-view-active" : "landing-view-active"}
           initial={{ opacity: 0, scale: 0.98, filter: 'blur(5px)' }}
@@ -122,7 +125,9 @@ const GitformeUi = () => {
       </AnimatePresence>
       
       <footer className="text-center py-8 px-4 mt-16 border-t-2 border-black bg-white/50">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-4"> {/* Increased gap for better spacing */}
+          {/* Product Hunt Badge */}
+        
           <p className="flex items-center gap-2 text-gray-600 font-medium">
             Inspired by: <a href="https://gitingest.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Gitingest.com</a>
           </p>
