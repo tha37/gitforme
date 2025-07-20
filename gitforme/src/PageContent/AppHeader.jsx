@@ -52,9 +52,8 @@ export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, s
                             <GitHubIcon />
                             <span className="hidden md:inline">Login</span>
                         </button>
-                        
                     )}
-        <div className="flex flex-col items-center">
+                     <div className="flex flex-col items-center">
           {/* Product Hunt Badge */}
           <a href="https://www.producthunt.com/products/gitforme?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-gitforme" target="_blank" rel="noopener noreferrer">
             <img 
