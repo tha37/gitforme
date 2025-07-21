@@ -1,4 +1,4 @@
-import { GitHubIcon, LoginIcon, LogoutIcon } from "../components/Iconsfile";
+import { GitHubIcon, LoginIcon, LogoutIcon , CoffeeIcon} from "../components/Iconsfile";
 
 export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, setRepoUrl, oncook }) => (
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b-2 border-black">
@@ -29,7 +29,6 @@ export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, s
                 </div>
 
                 <div className="flex items-center gap-4 flex-shrink-0">
-                    {/* This button correctly keeps the GitHubIcon */}
                     <a 
                         href="https://github.com/herin7/gitforme"
                         target="_blank" 
@@ -39,18 +38,16 @@ export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, s
                         <GitHubIcon />
                         <span className="hidden md:inline">Star on GitHub</span>
                     </a>
-                    
+            
                     {isAuthenticated ? (
                         <>
                             <span className="font-semibold hidden lg:inline">Hi, {user?.username}!</span>
-                            {/* Added a LogoutIcon for consistency */}
                             <button onClick={onLogout} className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black rounded-lg hover:bg-gray-100 transition-colors font-semibold shadow-[3px_3px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5">
                                 <LogoutIcon />
                                 <span className="hidden md:inline">Logout</span>
                             </button>
                         </>
                     ) : (
-                        /* This button now uses the LoginIcon */
                         <button onClick={onLogin} className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-black rounded-lg hover:bg-gray-100 transition-colors font-semibold shadow-[3px_3px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5">
                             <LoginIcon />
                             <span className="hidden md:inline">Login</span>
@@ -67,6 +64,16 @@ export const AppHeader = ({ isAuthenticated, user, onLogout, onLogin, repoUrl, s
                             />
                         </a>
                     </div>
+                               <a
+                        href="https://coff.ee/herinsoni3a"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 border-2 border-black rounded-lg hover:bg-yellow-200 transition-colors font-semibold shadow-[3px_3px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
+                        title="Buy me a coffee"
+                    >
+                        <CoffeeIcon />
+                        <span className="hidden lg:inline">Support</span>
+                    </a>
                 </div>
             </div>
         </div>

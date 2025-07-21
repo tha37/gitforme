@@ -47,6 +47,15 @@ export const LogoutIcon = (props) => (
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
 );
+export const CoffeeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+        <path d="M2 8h14v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z" />
+        <line x1="6" x2="6" y1="2" y2="4" />
+        <line x1="10" x2="10" y1="2" y2="4" />
+        <line x1="14" x2="14" y1="2" y2="4" />
+    </svg>
+);
 export const SparkleIcon = ({ className }) => (
   <svg className={`absolute ${className}`} width="60" height="60" viewBox="0 0 117 117" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M58.5 0L68.0312 24.9066L89.1658 20.3342L84.5934 41.4688L109.5 51L84.5934 60.5312L89.1658 81.6658L68.0312 77.0934L58.5 102L48.9688 77.0934L27.8342 81.6658L32.4066 60.5312L7.5 51L32.4066 41.4688L27.8342 20.3342L48.9688 24.9066L58.5 0Z" fill="#FFC700" />
