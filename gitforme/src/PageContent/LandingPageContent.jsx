@@ -34,24 +34,25 @@ const LandingPageContent = () => {
     return (
         <motion.div initial="hidden" animate="visible" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
 
+            {/* --- Updated Service Paused Notification --- */}
             <motion.div 
                 variants={itemVariants} 
-                className="max-w-4xl mx-auto mt-8 mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-800 rounded-md shadow-lg"
+                className="max-w-4xl mx-auto mt-8 mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-md shadow-lg"
                 role="alert"
             >
                 <div className="flex items-center">
                     <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        {/* An informational icon SVG */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                           <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                     <div>
-                        <p className="font-bold">Server is down temporarily</p>
-                        <p className="text-sm">We are resolving the issue due to heavy traffic. Please check back soon.</p>
+                        <p className="font-bold">Service Temporarily Paused</p>
+                        <p className="text-sm">This is a student project and the free hosting credits have run out. I'm working to get it back online. Thanks for your understanding!</p>
                     </div>
                 </div>
             </motion.div>
-
             <main className="flex flex-col items-center justify-center pt-16 md:pt-24 px-4 text-center relative overflow-hidden">
                 <div className="relative z-10">
                     <SparkleIcon className="absolute top-[-3rem] left-[-5rem] w-20 h-20 text-red-300 rotate-[-15deg] opacity-50 -z-10" />
