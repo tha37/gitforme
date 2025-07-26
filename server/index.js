@@ -21,7 +21,8 @@ const allowedOrigins = [
   'https://thankful-dune-02c682800.2.azurestaticapps.net',
   'https://gitforme-bot.onrender.com',
   'https://gitforme.onrender.com',
-  'https://gitforme-jbsp.vercel.app'
+  'https://gitforme-jbsp.vercel.app',
+  'http://localhost:5173'
 ];
 app.use(cors({
   origin: function (origin, callback) {
