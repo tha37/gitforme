@@ -9,11 +9,9 @@ import {
     BarChartIcon,
 } from '../components/Iconsfile';
 import FeatureCard from '../cards/FeatureCard'; 
-        import StepCard from '../cards/StepCard';       // Ensure StepCard accepts number, title, description
-
+import StepCard from '../cards/StepCard';
 
 const LandingPageContent = () => {
-    // Animation variants for sections to appear smoothly
     const sectionVariants = {
         hidden: { opacity: 0, y: 30 },
         visible: {
@@ -22,30 +20,43 @@ const LandingPageContent = () => {
             transition: { 
                 staggerChildren: 0.1, 
                 delayChildren: 0.2,
-                duration: 0.7, // Smooth transition for the section itself
+                duration: 0.7,
                 ease: "easeOut"
             }
         }
     };
 
-    // Animation variants for individual text elements/cards
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
     };
 
     return (
-        // Main container with initial and exit animations
         <motion.div initial="hidden" animate="visible" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
-            {/* --- Hero Section: Your Gateway to Open Source --- */}
-            {/* --- Hero Section: Your Gateway to Open Source --- */}
+
+            <motion.div 
+                variants={itemVariants} 
+                className="max-w-4xl mx-auto mt-8 mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-800 rounded-md shadow-lg"
+                role="alert"
+            >
+                <div className="flex items-center">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p className="font-bold">Server is down temporarily</p>
+                        <p className="text-sm">We are resolving the issue due to heavy traffic. Please check back soon.</p>
+                    </div>
+                </div>
+            </motion.div>
+
             <main className="flex flex-col items-center justify-center pt-16 md:pt-24 px-4 text-center relative overflow-hidden">
                 <div className="relative z-10">
-                    {/* Decorative Sparkle Icons for visual flair */}
                     <SparkleIcon className="absolute top-[-3rem] left-[-5rem] w-20 h-20 text-red-300 rotate-[-15deg] opacity-50 -z-10" />
                     <SparkleIcon className="absolute top-[-1rem] right-[-5rem] w-24 h-24 text-teal-300 rotate-[20deg] opacity-50 -z-10" />
                     
-                    {/* Main Headline */}
                     <motion.h1 
                         variants={itemVariants} 
                         className="text-5xl md:text-7xl font-bold tracking-tighter font-space-mono text-gray-900" 
@@ -59,7 +70,6 @@ const LandingPageContent = () => {
                         Master Any Repo. Instantly.
                     </motion.h1>
                     
-                    {/* Sub-headline / Tagline - UPDATED HERE */}
                     <motion.p 
                         variants={itemVariants} 
                         className="mt-6 text-lg md:text-xl text-gray-700 max-w-lg mx-auto font-semibold" 
@@ -68,18 +78,18 @@ const LandingPageContent = () => {
                     </motion.p>
                 </div>
             </main>
-            {/* --- How It Works Section --- */}
+
             <motion.section variants={sectionVariants} initial="hidden" animate="visible" className="py-24 px-4">
                 <div className="text-center mb-12">
                     <motion.h2 
                         variants={itemVariants} 
-                        className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900" // Applied font-space-mono
+                        className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900"
                     >
                         Your Journey in Three Simple Steps
                     </motion.h2>
                     <motion.p 
                         variants={itemVariants} 
-                        className="mt-3 text-lg text-gray-700 font-medium" // Slightly bolder
+                        className="mt-3 text-lg text-gray-700 font-medium"
                     >
                         Unlock the secrets of any codebase, ready for your next big contribution.
                     </motion.p>
@@ -103,19 +113,18 @@ const LandingPageContent = () => {
                 </div>
             </motion.section>
 
-            {/* --- Unlock Instant Code Understanding Section (Core Features) --- */}
             <motion.section variants={sectionVariants} initial="hidden" animate="visible" className="py-24 px-4 bg-white/50 backdrop-blur-sm border-y-2 border-black">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12">
                         <motion.h2 
                             variants={itemVariants} 
-                            className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900" // Applied font-space-mono
+                            className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900"
                         >
                             Powerful Insights at Your Fingertips
                         </motion.h2>
                         <motion.p 
                             variants={itemVariants} 
-                            className="mt-3 text-lg text-gray-700 font-medium" // Slightly bolder
+                            className="mt-3 text-lg text-gray-700 font-medium"
                         >
                             Go from complex code to clear understanding, instantly.
                         </motion.p>
@@ -146,19 +155,18 @@ const LandingPageContent = () => {
                 </div>
             </motion.section>
 
-            {/* --- Become a Contributor, Faster Section --- */}
             <motion.section variants={sectionVariants} initial="hidden" animate="visible" className="py-24 px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
                         <motion.h2 
                             variants={itemVariants} 
-                            className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900" // Applied font-space-mono
+                            className="text-4xl font-bold tracking-tighter font-space-mono text-gray-900"
                         >
                             Empowering Your Open Source Journey
                         </motion.h2>
                         <motion.p 
                             variants={itemVariants} 
-                            className="mt-3 text-lg text-gray-700 font-medium" // Slightly bolder
+                            className="mt-3 text-lg text-gray-700 font-medium"
                         >
                             We're here to help you make your first pull request, faster and with confidence. 🚀
                         </motion.p>
@@ -182,13 +190,11 @@ const LandingPageContent = () => {
                 </div>
             </motion.section>
 
-            {/* Call to Action (Optional, can be added if you want a prominent final nudge) */}
             <motion.div variants={itemVariants} className="mt-20 py-16 text-center bg-[#F9C79A]/50 border-t-2 border-b-2 border-black">
                 <h3 className="text-3xl font-bold text-gray-900 mb-6 font-space-mono">Ready to Contribute?</h3>
                 <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-                  Paste a GitHub repository URL in the header search bar and let GitForme illuminate your path.
+                    Paste a GitHub repository URL in the header search bar and let GitForme illuminate your path.
                 </p>
-                {/* You might add a button here that scrolls to the top or highlights the search bar */}
             </motion.div>
         </motion.div>
     );
