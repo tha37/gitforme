@@ -256,6 +256,7 @@ const ChatInput = ({ input, setInput, onSendMessage, isStreaming, status }) => {
 const ChatbotPanel = ({ onClose }) => {
     const chatLogic = useChat();
     const [width, setWidth] = useState(420);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 430);
     const [isMinimized, setIsMinimized] = useState(false);
     const isResizing = useRef(false);
 
@@ -275,6 +276,18 @@ const ChatbotPanel = ({ onClose }) => {
             }
         }
     }, []);
+
+    useEffect(()=>{
+        function handleResize() {
+            setIsMobile(window.innerWidth < 430);
+            if (window.innerWidth<=430){
+                setWidth(window.innerWidth)
+            }
+        }
+        window.addEventListener("resize", handleResize);
+        handleResize();
+        return ()=> window.removeEventListener('resize', handleResize);
+    },[])
 
     const handleMouseUp = useCallback(() => {
         isResizing.current = false;
