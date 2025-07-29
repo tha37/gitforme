@@ -42,18 +42,18 @@ const LandingPageContent = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2L15 8h6l-4.9 3.6L18 18l-6-4.4L6 18l1.9-6.4L3 8h6z" />
                     </svg>
-                    <span className="font-semibold text-sm">🎉 Thanks for the overwhelming response — we have 1000+ users now!</span>
+                    <span className="font-semibold text-sm">🎉 Thanks for the overwhelming response — we have 2000+ users now!</span>
                 </div>
             </motion.div>
             {/* --- Updated Service Paused Notification --- */}
-            <motion.div
+  
+         {/* <motion.div
                 variants={itemVariants}
                 className="max-w-4xl mx-auto mt-8 mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-md shadow-lg"
                 role="alert"
             >
                 <div className="flex items-center">
                     <div>
-                        {/* An informational icon SVG */}
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -63,7 +63,7 @@ const LandingPageContent = () => {
                         <p className="text-sm">This is a student project and the free hosting credits have run out. I'm working to get it back online. Thanks for your understanding!</p>
                     </div>
                 </div>
-            </motion.div>
+            </motion.div> */}
 
             <main className="flex flex-col items-center justify-center pt-16 md:pt-24 px-4 text-center relative overflow-hidden">
                 <div className="relative z-10">
