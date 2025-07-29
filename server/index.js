@@ -10,7 +10,7 @@ const authRoute = require("./Routes/AuthRoute");
 const repoRoute = require("./Routes/RepoRoutes");
 const insightsRoutes = require('./Routes/InsightRoutes'); 
 const { requireAuth } = require("./Middlewares/AuthMiddleware");
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 const app = express();
 app.set('trust proxy', 1); 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
@@ -18,11 +18,11 @@ redisClient.on('connect', () => console.log('Connected to Redis'));
 const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
 const allowedOrigins = [
   'https://www.gitforme.tech',
-  'https://thankful-dune-02c682800.2.azurestaticapps.net',
+  // 'https://thankful-dune-02c682800.2.azurestaticapps.net',
   'https://gitforme-bot.onrender.com',
-  'https://gitforme.onrender.com',
+  // 'https://gitforme.onrender.com',
   'https://gitforme-jbsp.vercel.app',
-  'http://localhost:5173'
+  // 'http://localhost:5173'
 ];
 app.use(cors({
   origin: function (origin, callback) {
@@ -52,11 +52,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-  secure: true, 
-  httpOnly: true,
-  maxAge: 1000 * 60 * 60 * 24, 
-  sameSite: 'none', 
-},
+      secure: true, 
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24, 
+      sameSite: 'none', 
+    },
   })
 );
 
