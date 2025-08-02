@@ -22,7 +22,8 @@ const allowedOrigins = [
   'https://www.gitforme.tech',
   'https://gitforme-jbsp.vercel.app',
   'https://gitforme-bot.onrender.com',
-  // 'http://localhost:5173'
+  'http://localhost:5173',
+  'http://localhost:5173/',
 ];
 app.use(cors({
   origin: function (origin, callback) {
@@ -52,10 +53,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, 
+      secure: true, //disable in dev mode
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24, 
-      sameSite: 'none', 
+      sameSite: 'none', //disable in dev mode
+      // sameSite: 'lax', //Use this in dev mode 
     },
   })
 );
