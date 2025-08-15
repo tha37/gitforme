@@ -1,4 +1,4 @@
-const User = require('../models/UserModel');
+const User = require('../models/UserModel.cjs');
 const axios = require('axios');
 
 exports.githubCallback = async (req, res) => {
