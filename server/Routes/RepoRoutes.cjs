@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { fetchRepoDetails, fetchReadme } = require('../api/githubApi');
+const { fetchRepoDetails, fetchReadme } = require('../api/githubApi.cjs');
 const { Octokit } = require("@octokit/rest");
 const {
     fetchGitTree,
