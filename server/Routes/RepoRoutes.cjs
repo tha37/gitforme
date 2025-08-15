@@ -14,9 +14,8 @@ const {
     fetchDeployments,
     fetchFileCommits,
     fetchFileContent,
-} = require('../Controllers/GithubController');
-
-const { fetchDependencyHealth } = require('../Controllers/InsightController');
+} = require('../Controllers/GithubController.cjs');
+const { fetchDependencyHealth } = require('../Controllers/InsightController.cjs');
 // router.get('/repos/:username/:reponame/file/*', fetchFileContent);
 // router.get('/repos/:username/:reponame/file/*', fetchFileContent);
 router.get('/repos/:username/:reponame/file/:path', fetchFileContent);
