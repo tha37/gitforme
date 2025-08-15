@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const RedisStore = require("connect-redis").default;
 const redisClient = require("./util/RediaClient.cjs"); 
-const authRoute = require("./Routes/AuthRoute");
+const authRoute = require("./Routes/AuthRoute.cjs");
 const repoRoute = require("./Routes/RepoRoutes");
 const insightsRoutes = require('./Routes/InsightRoutes'); 
 //added the route here
