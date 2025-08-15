@@ -5,16 +5,16 @@ const cors = require("cors");
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const RedisStore = require("connect-redis").default;
-const redisClient = require("./util/RediaClient.cjs"); 
-const authRoute = require("./Routes/AuthRoute.cjs");
-const repoRoute = require("./Routes/RepoRoutes");
-const insightsRoutes = require('./Routes/InsightRoutes'); 
+const redisClient = require("./util/RediaClient.cjs");
+const authRoute = require("./Routes/AuthRoute.cjs"); // ပြင်ဆင်ပြီး
+const repoRoute = require("./Routes/RepoRoutes.cjs"); // ပြင်ဆင်ပြီး
+const insightsRoutes = require('./Routes/InsightRoutes.cjs'); // ပြင်ဆင်ပြီး
 //added the route here
-const statsRoute = require('./Routes/StatsRoute');
+const statsRoute = require('./Routes/StatsRoute.cjs'); // ပြင်ဆင်ပြီး
 const { requireAuth } = require("./Middlewares/AuthMiddleware");
 const PORT = process.env.PORT || 3000;
 const app = express();
-app.set('trust proxy', 1); 
+app.set('trust proxy', 1);
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 redisClient.on('connect', () => console.log('Connected to Redis'));
 const redisStore = new RedisStore({ client: redisClient, prefix: "session:" });
@@ -40,7 +40,6 @@ app.use(cors({
   preflightContinue: false,
   optionsSuccessStatus: 204
 }));
-
 // 2. Body Parsers
 app.use(express.json());
 app.use(cookieParser());
@@ -56,20 +55,19 @@ app.use(
     cookie: {
       secure: isProduction, //disable in dev mode
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24, 
+      maxAge: 1000 * 60 * 60 * 24,
       //reduced the max age to session checking.
-      // maxAge: 1000, 
+      // maxAge: 1000,
       // sameSite: 'none', //disable in dev mode
-      sameSite: isProduction? 'none':'lax', //Use this in dev mode 
+      sameSite: isProduction?
+'none':'lax', //Use this in dev mode
     },
   })
 );
-
 // --- Database Connection ---
 mongoose.connect(process.env.MONGO_URL, {})
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
-
 // --- API Routes ---
 app.use((req, res, next) => {
   console.log('Incoming cookies:', req.cookies);
@@ -77,7 +75,6 @@ app.use((req, res, next) => {
   console.log('Session data:', req.session);
   next();
 });
-
 app.use("/api/auth", authRoute);
 //Status route added
 app.use("/api/stats", statsRoute);
@@ -86,16 +83,14 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/github", requireAuth);
 
 app.use("/api/github", insightsRoutes);
-app.use("/api/github", repoRoute);     
-
+app.use("/api/github", repoRoute);
 app.post('/api/auth/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ message: 'Logout failed' });
-    res.clearCookie('token'); 
+    res.clearCookie('token');
     res.json({ status: true });
   });
 });
-
 app.use((req, res) => res.status(404).json({ error: "Route not found" }));
 // const PORT = process.env.PORT || 3000;
 // --- Server Start ---
