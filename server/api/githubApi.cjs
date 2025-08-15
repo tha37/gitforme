@@ -1,6 +1,6 @@
 const axios = require('axios');
 const redis = require('redis');
-const redisClient = require('../util/RediaClient');
+const redisClient = require('../util/RediaClient.cjs');
 const User = require('../models/UserModel');
 
 const githubApi = axios.create({
