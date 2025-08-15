@@ -1,7 +1,7 @@
 const axios = require('axios');
 const redis = require('redis');
 const redisClient = require('../util/RediaClient.cjs');
-const User = require('../models/UserModel');
+const User = require('../models/UserModel.cjs');
 
 const githubApi = axios.create({
   baseURL: 'https://api.github.com',
