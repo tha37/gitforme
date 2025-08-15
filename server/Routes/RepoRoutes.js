@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { fetchRepoDetails, fetchReadme } = require('../api/githubApi');
-const { Octokit } = require("@octokit/rest");
+import { Octokit } from "@octokit/rest"; // ပြောင်းလဲထားသော code
 const {
     fetchGitTree,
     getRepoTimeline,
@@ -36,4 +36,3 @@ router.get('/:username/:reponame/timeline', getRepoTimeline);
 router.get('/:username/:reponame/insights', fetchRepoInsights);
 
 module.exports = router;
-
