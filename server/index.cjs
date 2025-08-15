@@ -6,11 +6,11 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const RedisStore = require("connect-redis").default;
 const redisClient = require("./util/RediaClient.cjs");
-const authRoute = require("./Routes/AuthRoute.cjs"); // ပြင်ဆင်ပြီး
-const repoRoute = require("./Routes/RepoRoutes.cjs"); // ပြင်ဆင်ပြီး
-const insightsRoutes = require('./Routes/InsightRoutes.cjs'); // ပြင်ဆင်ပြီး
+const authRoute = require("./Routes/AuthRoute.cjs");
+const repoRoute = require("./Routes/RepoRoutes.cjs");
+const insightsRoutes = require('./Routes/InsightRoutes.cjs');
 //added the route here
-const statsRoute = require('./Routes/StatsRoute.cjs'); // ပြင်ဆင်ပြီး
+const statsRoute = require('./Routes/StatsRoute.cjs');
 const { requireAuth } = require("./Middlewares/AuthMiddleware");
 const PORT = process.env.PORT || 3000;
 const app = express();
