@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { githubCallback, verifyUser } = require('../Controllers/AuthController');
+const { githubCallback, verifyUser } = require('../Controllers/AuthController.cjs');
 
 // Redirect to GitHub for OAuth
 router.get('/github', (req, res) => {
